@@ -1,0 +1,116 @@
+'use client';
+import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
+import type {Card} from '../lib/card-validation';
+import {boardPanelCapacity,layoutBoardPanel,sectionBoardNotes,type BoardReservedArea} from '../lib/board-note-layout';
+import {startBoardPanelScroll} from '../lib/board-panel-scroll';
+import {StickyNote} from './sticky-note';
+import './scattered-notes.css';
+
+type ScatteredNotesProps={cards:Card[];onSelect:(card:Card,source:HTMLButtonElement)=>void;showGreeting?:boolean;openedCardId?:string;paused?:boolean};
+
+export function ScatteredNotes({cards,onSelect,showGreeting=false,openedCardId,paused=false}:ScatteredNotesProps){
+ const container=useRef<HTMLDivElement>(null);
+ const greeting=useRef<HTMLDivElement>(null);
+ const [bounds,setBounds]=useState({width:0,height:0});
+ const [greetingSize,setGreetingSize]=useState({width:0,height:0});
+ const [panelWidths,setPanelWidths]=useState<Record<string,number>>({});
+ const pageKey=cards.map(card=>card.id||card.recipient).join('|');
+ const widthScope=`${pageKey}:${bounds.width}:${bounds.height}:`;
+ const boardWidth=Math.max(bounds.width,...Object.entries(panelWidths).filter(([key])=>key.startsWith(widthScope)).map(([,width])=>width));
+ const reportWidth=useCallback((key:string,width:number)=>{
+  const scopedKey=widthScope+key;
+  setPanelWidths(previous=>previous[scopedKey]===width?previous:{...previous,[scopedKey]:width});
+ },[widthScope]);
+ const greetingTop=Math.max(12,(bounds.height-greetingSize.height)/2);
+ const reservedGreeting=useMemo(()=>showGreeting?{x:(bounds.width-greetingSize.width)/2-12,y:greetingTop-12,width:greetingSize.width+24,height:greetingSize.height+24}:undefined,[showGreeting,bounds.width,greetingSize,greetingTop]);
+ const capacity=boardPanelCapacity(bounds.width,bounds.height,reservedGreeting);
+ const panels=useMemo(()=>sectionBoardNotes(cards,capacity),[cards,capacity]);
+ useLayoutEffect(()=>{const viewport=container.current?.parentElement;if(viewport)viewport.scrollLeft=Math.max(0,(boardWidth-bounds.width)/2)},[boardWidth,bounds.width]);
+ useLayoutEffect(()=>{
+  const viewport=container.current?.parentElement;
+  if(!viewport)return;
+  const measure=()=>{
+   const style=getComputedStyle(viewport);
+   const width=Math.max(1,viewport.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight));
+   const height=Math.max(1,viewport.clientHeight-parseFloat(style.paddingTop)-parseFloat(style.paddingBottom));
+   setBounds(previous=>previous.width===width&&previous.height===height?previous:{width,height});
+  };
+  measure();const observer=new ResizeObserver(measure);observer.observe(viewport);
+  return()=>observer.disconnect();
+ },[]);
+ useLayoutEffect(()=>{
+  const inscription=greeting.current;
+  if(!showGreeting||!inscription)return;
+  const measure=()=>{
+   const width=inscription.offsetWidth,height=inscription.offsetHeight;
+   setGreetingSize(previous=>previous.width===width&&previous.height===height?previous:{width,height});
+  };
+  measure();const observer=new ResizeObserver(measure);observer.observe(inscription);
+  return()=>observer.disconnect();
+ },[showGreeting]);
+ useLayoutEffect(()=>{const viewport=container.current?.parentElement;if(viewport)viewport.scrollTop=0},[pageKey,capacity]);
+ useEffect(()=>{
+  const board=container.current,viewport=board?.parentElement;
+  if(!board||!viewport||paused||openedCardId||panels.length<2)return;
+  return startBoardPanelScroll(viewport,board);
+ },[pageKey,capacity,panels.length,paused,openedCardId]);
+ const sections=panels.length?panels:showGreeting?[[]]:[];
+ return <div ref={container} className="sectioned-notes" style={{'--board-viewport-width':`${bounds.width}px`} as CSSProperties}>
+  {showGreeting&&<div className="board-fixed-title"><ChalkGreeting inscriptionRef={greeting} left={boardWidth/2} top={greetingTop}/></div>}
+  {sections.map((notes,index)=><ScatteredNotePanel key={notes[0]?.id||index} cards={notes} onSelect={onSelect} openedCardId={openedCardId} reservedGreeting={reservedGreeting} bounds={bounds} index={index} count={sections.length} reportWidth={reportWidth} boardWidth={boardWidth}/>)}
+  {panels.length>1&&<ScatteredNotePanel cards={panels[0]} onSelect={onSelect} reservedGreeting={reservedGreeting} bounds={bounds} index={0} count={sections.length} boardWidth={boardWidth} loopClone/>}
+ </div>;
+}
+
+function ScatteredNotePanel({cards,onSelect,openedCardId,bounds,index,count,loopClone=false,reservedGreeting,reportWidth,boardWidth}:ScatteredNotesProps&{bounds:{width:number;height:number};index:number;count:number;loopClone?:boolean;reservedGreeting?:BoardReservedArea;reportWidth?:(key:string,width:number)=>void;boardWidth?:number}){
+ const container=useRef<HTMLDivElement>(null);
+ const [measuredSizes,setMeasuredSizes]=useState<number[]>([]);
+ const baseLayout=useMemo(()=>layoutBoardPanel(cards.map(card=>card.id||card.recipient),bounds.width,bounds.height,[],reservedGreeting),[cards,bounds,reservedGreeting]);
+ useLayoutEffect(()=>{
+  const notes=container.current?.querySelectorAll<HTMLElement>('.sticky-note');
+  if(!notes)return;
+  const measure=()=>{
+   const sizes=Array.from(notes,note=>note.offsetWidth);
+   setMeasuredSizes(previous=>previous.length===sizes.length&&previous.every((size,index)=>size===sizes[index])?previous:sizes);
+  };
+  measure();const observer=new ResizeObserver(measure);notes.forEach(note=>observer.observe(note));
+  return()=>observer.disconnect();
+ },[cards,baseLayout]);
+ const fittedSizes=useMemo(()=>{
+  // Scale complete messages into this panel's slots instead of splitting it.
+  return measuredSizes.map(size=>Math.min(size,baseLayout.size));
+ },[measuredSizes,baseLayout]);
+ const layout=useMemo(()=>layoutBoardPanel(cards.map(card=>card.id||card.recipient),bounds.width,bounds.height,fittedSizes,reservedGreeting),[cards,bounds,fittedSizes,reservedGreeting]);
+ useLayoutEffect(()=>{reportWidth?.(String(index),layout.width)},[reportWidth,index,layout.width]);
+ return <div ref={container} className="board-notes scattered-notes board-note-panel" data-expanded={layout.height>bounds.height||layout.width>bounds.width||undefined} data-board-loop-clone={loopClone||undefined} inert={loopClone||undefined} aria-hidden={loopClone||undefined} role="group" aria-label={`Phần ${index+1} / ${count}`} style={{width:boardWidth||layout.width,height:layout.height,visibility:bounds.width?'visible':'hidden','--board-note-size':`${layout.size}px`,'--board-viewport-width':`${bounds.width}px`} as CSSProperties}>
+  {cards.map((card,index)=>{
+   const originalPosition=layout.positions[index];
+   const position={...originalPosition,left:originalPosition.left+((boardWidth||layout.width)-layout.width)/2};
+   const size=layout.sizes[index];
+   const paperSize=measuredSizes[index]||baseLayout.sizes[index];
+   return <button className="board-note-button" data-opened={Boolean(openedCardId&&card.id===openedCardId)||undefined} key={card.id} onClick={event=>onSelect(card,event.currentTarget)} aria-label={`Đọc lời nhắn gửi ${card.recipient}`} style={{left:position.left,top:position.top,width:size,height:size,'--note-rotation':`${position.rotation}deg`} as CSSProperties}><span className="board-note-paper" style={{width:baseLayout.sizes[index],transform:`scale(${size/paperSize})`}}><StickyNote card={card} compact/></span></button>;
+  })}
+ </div>;
+}
+
+function ChalkGreeting({inscriptionRef,left,top}:{inscriptionRef:React.RefObject<HTMLDivElement|null>;left:number;top:number}){
+ return <div ref={inscriptionRef} className="board-chalk-greeting" style={{left,top}}>
+   <div className="greeting-margin-doodles" aria-hidden="true">
+    <svg className="greeting-doodle greeting-doodle-heart" viewBox="0 0 24 24" focusable="false"><path d="M12 20 4 12C-2 5 8 0 12 7c5-7 14-1 8 6Z"/></svg>
+    <svg className="greeting-doodle greeting-doodle-flower" viewBox="0 0 24 24" focusable="false"><path d="M9 8C3 0 0 11 6 12c-8 5 2 12 5 5 2 9 13 3 7-3 9 0 4-11-2-7 2-8-8-8-7 1Z"/><circle cx="12" cy="11" r="2.5"/></svg>
+    <svg className="greeting-doodle greeting-doodle-star" viewBox="0 0 24 24" focusable="false"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/></svg>
+    <svg className="greeting-doodle greeting-doodle-sparks" viewBox="0 0 24 24" focusable="false"><path d="m9 3 1 13m-7-7 13-1m3 10 1 4m-3-2 5-1"/></svg>
+    <svg className="greeting-doodle greeting-doodle-plane" viewBox="0 0 24 24" focusable="false"><path d="m2 9 20-7-7 20-4-9-9-4Zm9 4L22 2m-11 11-1 7 4-4"/></svg>
+    <svg className="greeting-doodle greeting-doodle-sprout" viewBox="0 0 24 24" focusable="false"><path d="M12 22c-2-7-1-13 3-19m-3 12C3 16 1 10 2 7c6 0 10 3 10 8Zm1-5c0-7 5-9 9-8 0 5-3 9-9 8Z"/></svg>
+    <svg className="greeting-doodle greeting-doodle-loop" viewBox="0 0 24 24" focusable="false"><path d="M2 17C-1 6 14 1 16 9c2 7-10 10-9 3 1-6 16-7 15 8m-3-3 3 3 1-4"/></svg>
+   </div>
+   <svg className="greeting-chalk-emblem" viewBox="0 0 80 38" fill="none" aria-hidden="true" focusable="false">
+    <g strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6">
+     <path className="greeting-emblem-heart" d="M40 30 29 19c-8-9 5-18 11-9 7-9 19 0 11 9Z"/>
+     <path d="M20 12q-5 6 0 12m-7-17q-9 11 0 22m47-17q5 6 0 12m7-17q9 11 0 22"/>
+     <path className="greeting-emblem-rays" d="m34 2 1 2m11-2-1 2M3 17v3m74-3v3"/>
+    </g>
+   </svg>
+   <h1 aria-label="TRẠM PHÁT SÓNG YÊU THƯƠNG 20/11"><span className="greeting-chalk-kicker">TRẠM</span><span className="greeting-chalk-main">PHÁT SÓNG</span><span className="greeting-chalk-love">YÊU THƯƠNG</span><strong className="greeting-chalk-date">20/11</strong></h1>
+  </div>;
+}

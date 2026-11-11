@@ -1,0 +1,231 @@
+.board-notes.scattered-notes,
+.classroom-community .board-notes.scattered-notes {
+ position: relative;
+ display: block;
+ width: 100%;
+ padding: 0;
+}
+.scattered-notes .board-note-button,
+.classroom-community .scattered-notes .board-note-button {
+ position: absolute;
+ max-width: none;
+ transform: rotate(var(--note-rotation));
+ perspective: 1400px;
+ perspective-origin: var(--tape-x, 50%) var(--tape-y, 2%);
+}
+.scattered-notes .board-note-paper {
+ display: block;
+ transform-origin: top left;
+}
+.scattered-notes .board-note-button .sticky-note {
+ width: 100%;
+ margin: 0;
+ transform-origin: var(--tape-x) var(--tape-y);
+}
+.scattered-notes .board-note-button:is(:hover, :focus-visible) { transform: rotate(var(--note-rotation)); }
+.scattered-notes .board-note-button[data-opened=true] { visibility: hidden; }
+.scattered-notes .board-note-button[data-opened=true] .sticky-note { animation-play-state: paused; }
+.scattered-notes .note-paper-shape {
+ filter: drop-shadow(1px 3px 1px #14291e35) drop-shadow(2px 5px 3px #14291e24);
+}
+.scattered-notes .board-note-button:focus-visible .note-paper-shape {
+ filter: drop-shadow(1px 4px 2px #14291e35) drop-shadow(3px 13px 7px #14291e3d);
+}
+@media (prefers-reduced-motion: no-preference) {
+ .scattered-notes .board-note-button { transition: none; }
+ .scattered-notes .board-note-button .sticky-note {
+  rotate: x 0deg;
+  transition: rotate .35s ease-out;
+  animation: board-note-breathe 8s ease-in-out infinite;
+ }
+ .scattered-notes .board-note-button:nth-of-type(3n + 1) .sticky-note { animation-delay: -2.6s; animation-duration: 9s; }
+ .scattered-notes .board-note-button:nth-of-type(3n + 2) .sticky-note { animation-delay: -5.1s; animation-duration: 7.5s; }
+ .scattered-notes .note-paper-shape { transition: filter .24s ease-out; }
+ .scattered-notes .board-note-button:focus-visible .sticky-note { rotate: x 5deg; animation-play-state: paused; }
+ .scattered-notes .board-note-button:active .sticky-note { rotate: x 1deg; transition-duration: .12s; }
+}
+@media (hover: hover) and (pointer: fine) {
+ .scattered-notes .board-note-button:hover .note-paper-shape {
+  filter: drop-shadow(1px 4px 2px #14291e35) drop-shadow(3px 13px 7px #14291e3d);
+ }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+ .scattered-notes .board-note-button:hover .sticky-note { rotate: x 5deg; animation-play-state: paused; }
+ .scattered-notes .board-note-button:active .sticky-note { rotate: x 1deg; }
+}
+@keyframes board-note-breathe {
+ 0%, 100% { transform: rotateX(.8deg); }
+ 50% { transform: rotateX(2.8deg); }
+}
+
+.board-chalk-greeting {
+ position: absolute;
+ width: min(620px, calc(var(--board-viewport-width) * .62));
+ padding: 24px 30px 26px;
+ transform: translateX(-50%);
+ text-align: center;
+ color: #f3ecd5;
+ pointer-events: none;
+}
+.board-chalk-greeting h1 {
+ position: relative;
+ margin: 0;
+ font-family: 'Grandstander', cursive;
+ font-size: clamp(25px, 3.2vw, 44px);
+ font-weight: 800;
+ font-style: normal;
+ line-height: 1.3;
+ letter-spacing: .025em;
+ text-shadow: .6px .4px 1px #f6f0d54d, -.5px -.3px 1px #f6f0d533;
+}
+.greeting-chalk-emblem {
+ display: block;
+ width: clamp(48px, 5vw, 68px);
+ height: auto;
+ margin: 0 auto 9px;
+ overflow: visible;
+ stroke: #b8efcf;
+ transform: rotate(-3deg);
+}
+.greeting-chalk-emblem .greeting-emblem-heart { stroke: #ffadd0; fill: #ffadd026; }
+.greeting-chalk-emblem .greeting-emblem-rays { stroke: #ffe184; }
+.greeting-margin-doodles { position: absolute; inset: 0; pointer-events: none; }
+.greeting-doodle {
+ position: absolute;
+ width: 17px;
+ height: auto;
+ aspect-ratio: 1;
+ fill: none;
+ stroke: #d5dec8;
+ stroke-width: 1.35;
+ stroke-linecap: round;
+ stroke-linejoin: round;
+ opacity: 1;
+ scale: 1.35;
+ filter: drop-shadow(0 0 3px #fff4c51a);
+}
+.greeting-doodle-heart { top: 12%; left: 15%; width: 19px; stroke: #dfb6b6; transform: rotate(-17deg); }
+.greeting-doodle-flower { top: 9%; right: 13%; width: 21px; stroke: #ead497; transform: rotate(13deg); }
+.greeting-doodle-star { top: 43%; left: 1px; width: 15px; stroke: #ead497; transform: rotate(-9deg); }
+.greeting-doodle-sparks { top: 39%; right: 0; width: 15px; transform: rotate(11deg); }
+.greeting-doodle-plane { bottom: 6%; left: 17%; width: 19px; transform: rotate(12deg); }
+.greeting-doodle-sprout { bottom: 23%; left: 2px; width: 16px; stroke: #c4d6b7; transform: rotate(-19deg); }
+.greeting-doodle-loop { bottom: 12%; right: 10%; width: 22px; stroke: #dfb6b6; transform: rotate(-16deg); }
+.board-chalk-greeting h1 > * {
+ display: block;
+ transform: rotate(-1.5deg);
+ background: radial-gradient(ellipse, #fff9e7 15%, #fff0c9e6 65%, #fff9e7 90%) 0 0 / 3px 2px;
+ background-clip: text;
+ -webkit-background-clip: text;
+ color: transparent;
+}
+.board-chalk-greeting h1 .greeting-chalk-kicker {
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ gap: 12px;
+ margin-bottom: .65em;
+ color: #b8efcf;
+ background: none;
+ font-size: .42em;
+ font-weight: 500;
+ letter-spacing: .28em;
+ transform: none;
+}
+.greeting-chalk-kicker::before, .greeting-chalk-kicker::after { content: ''; width: 1.8em; height: .18em; border-top: 1px solid #d1d9c580; border-bottom: 1px solid #d1d9c530; transform: rotate(-4deg); }
+.greeting-chalk-kicker::after { transform: rotate(4deg); }
+.board-chalk-greeting h1 .greeting-chalk-main { font-size: .86em; letter-spacing: .045em; transform: rotate(-2deg); }
+.board-chalk-greeting h1 .greeting-chalk-love {
+ position: relative;
+ display: table;
+ margin-inline: auto;
+ padding-bottom: .24em;
+ font-size: 1.04em;
+ letter-spacing: -.025em;
+ background-image: radial-gradient(ellipse, #ffe788 15%, #ffd564e6 65%, #fff0a8 90%);
+ transform: rotate(-2deg);
+}
+.greeting-chalk-love::after { content: ''; position: absolute; left: 18%; right: 18%; bottom: .01em; height: .12em; border-top: 1.5px solid #ead497a6; border-bottom: 1px solid #ead49747; border-radius: 50%; transform: rotate(1deg); }
+.board-chalk-greeting h1 .greeting-chalk-date {
+ position: relative;
+ display: table;
+ margin: .7em auto 0;
+ padding: .15em .65em;
+ border: 2px solid #ffadd099;
+ border-radius: 48% 43% 46% 41%;
+ color: #ffb9d7;
+ background: none;
+ font-size: .56em;
+ font-weight: 650;
+ letter-spacing: .06em;
+ transform: rotate(-3deg);
+}
+.greeting-chalk-date::before, .greeting-chalk-date::after {
+ content: '';
+ position: absolute;
+ top: calc(50% - .13em);
+ width: .26em;
+ height: .26em;
+ border: 1px solid #ead497a6;
+ transform: rotate(45deg);
+}
+.greeting-chalk-date::before { left: -.85em; }
+.greeting-chalk-date::after { right: -.85em; }
+@media (max-width: 700px) {
+ .board-chalk-greeting { width: min(420px, calc(var(--board-viewport-width) - 24px)); padding: 18px 32px 26px; }
+ .board-chalk-greeting h1 { font-size: clamp(22px, 5.8vw, 33px); }
+}
+.classroom-community .board-content:has(> .sectioned-notes),
+.board-note-scroll:has(> .sectioned-notes) {
+ scroll-snap-type: y mandatory;
+ scroll-behavior: auto;
+ padding-block: 0;
+}
+.classroom-community .board-content.board-is-advancing,
+.board-note-scroll.board-is-advancing { scroll-snap-type: none; }
+.sectioned-notes { width: 100%; }
+.board-fixed-title {
+ position: sticky;
+ top: 0;
+ height: 0;
+ z-index: 2;
+ pointer-events: none;
+}
+.board-note-panel {
+ scroll-snap-align: start;
+ scroll-snap-stop: always;
+}
+.board-fixed-title .board-chalk-greeting {
+ width: min(480px, calc(var(--board-viewport-width) * .4));
+ padding-inline: 28px;
+}
+.board-fixed-title .board-chalk-greeting h1 { font-size: clamp(34px, 3.65vw, 52px); }
+.board-fixed-title .greeting-chalk-emblem { width: clamp(60px, 6vw, 84px); }
+.board-fixed-title .greeting-doodle-heart,
+.board-fixed-title .greeting-doodle-loop { stroke: #ffadd0; }
+.board-fixed-title .greeting-doodle-flower,
+.board-fixed-title .greeting-doodle-star { stroke: #ffe184; }
+.board-fixed-title .greeting-doodle-sprout,
+.board-fixed-title .greeting-doodle-sparks { stroke: #b8efcf; }
+.scattered-notes .sticky-note.note-compact .note-writing { font-size: 15px; }
+.scattered-notes .sticky-note.note-compact h2 { font-size: 16px; line-height: 1.2; margin: 0 0 3px; white-space: normal; overflow: visible; }
+.scattered-notes .sticky-note.note-compact .note-message {
+ display: block;
+ -webkit-line-clamp: unset;
+ overflow: visible;
+ font-size: 15px;
+ line-height: 1.45;
+ margin: 0;
+}
+.scattered-notes .sticky-note.note-compact .note-signature { font-size: 15px; line-height: 1.45; margin: 6px 0 0; white-space: normal; overflow: visible; }
+.sectioned-notes { position: relative; }
+.classroom-community .board-content:has(.sectioned-notes),
+.board-note-scroll:has(.sectioned-notes) { overflow-x: auto; }
+@media (min-width: 760px) and (max-width: 1099px) {
+ .board-fixed-title .board-chalk-greeting { width: 300px; padding-inline: 18px; }
+ .board-fixed-title .board-chalk-greeting h1 { font-size: 34px; }
+}
+@media (max-width: 759px) {
+ .board-fixed-title .board-chalk-greeting { width: min(462px, calc(var(--board-viewport-width) - 32px)); padding: 10px 32px 14px; }
+ .board-fixed-title .board-chalk-greeting h1 { font-size: clamp(26px, min(6.8vw, 5.4svh), 40px); }
+}

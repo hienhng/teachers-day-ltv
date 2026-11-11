@@ -6,3 +6,7 @@ node_modules/
 coverage/
 .vercel/
 next-env.d.ts
+
+.npm-cache/
+
+.qa/

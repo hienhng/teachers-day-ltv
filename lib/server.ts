@@ -6,7 +6,7 @@ export const json=(value:unknown,status=200)=>Response.json(value,{status,header
 export function failure(error:unknown){
  if(error instanceof ApiError)return json({error:error.message},error.status);
  // Do not log connection strings, card content, passwords, or database errors.
- return json({error:'Chưa thể kết nối khu vườn. Vui lòng thử lại sau.'},503);
+ return json({error:'Chưa thể kết nối bảng tri ân. Vui lòng thử lại sau.'},503);
 }
 export function database(){
  const url=process.env.DATABASE_URL;

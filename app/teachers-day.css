@@ -1,0 +1,260 @@
+/* Teachers' Day: warm paper, classroom greens, and notes written with care. */
+:root{--plum:#293f35;--cream:#f8f5eb;--chalk:#f5f0db;--classroom-green:#284e40;--classroom-muted:#687469;--paper-rule:#ddd8c8}
+body{background:#f8f5eb;color:#293f35}
+button,a,input,textarea{touch-action:manipulation}
+button:focus-visible,a:focus-visible{outline:3px solid #a96c32;outline-offset:5px}
+.site-header{height:94px;max-width:1440px;margin:auto;padding:0 5%;border-bottom:1px solid #dcdacb;background:#f8f5eb;gap:32px}
+.brand{color:#294e3e;gap:12px;text-align:left;flex-shrink:0}
+.note-icon{width:33px;height:39px;flex-shrink:0;color:#f3d477}
+.brand>span{font-family:var(--site-font);font-size:25px;letter-spacing:-.7px;font-weight:700}
+.brand small{font-family:var(--site-font);font-size:8px;letter-spacing:1px;font-weight:400;margin-top:5px;color:#73786b}
+.site-header nav{margin-left:auto;gap:26px}
+.site-header nav button{font-size:11px;color:#5a675c;padding:12px 0}
+.site-header nav button[aria-current=page]{color:#244e3b;border-color:#244e3b}
+.site-header .sound{border:1px solid #c8cebf;background:#eeeee1;color:#3d5a48;padding:8px 12px;font-size:9px}
+.teachers-home{overflow:hidden}
+.teachers-hero{max-width:1440px;margin:auto;padding:82px 5% 76px;display:grid;grid-template-columns:1fr 1.04fr;gap:54px;align-items:center}
+.school-kicker{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:600;letter-spacing:1.8px;margin:0 0 29px;color:#31523f}
+.school-kicker>span{width:7px;height:7px;background:#a16b37;border-radius:50%}
+.edition-label{font-size:9px;font-weight:600;letter-spacing:2px;line-height:1.9;color:#8b6c48;margin:0 0 20px}
+.hero-editorial h1{font-family:var(--site-font);font-weight:400;font-size:clamp(38px,4.25vw,65px);line-height:1.22;letter-spacing:-2px;margin:0 0 25px;color:#274b3b}
+.hero-editorial h1 em{color:#a36b3f;font-weight:400}
+.teachers-lead{font-size:16px;font-weight:600;line-height:1.8;margin:0 0 12px}
+.teachers-description{font-size:12px;line-height:2.1;color:#6a7367;max-width:450px;margin:0}
+.teachers-actions{display:flex;align-items:center;gap:24px;margin:29px 0 0;flex-wrap:wrap}
+.classroom-button{display:inline-flex;align-items:center;justify-content:center;gap:12px;background:#2e5342;color:#fff9e9;border:1px solid #244333;padding:15px 21px;font-size:12px;font-weight:600;box-shadow:0 3px 0 #17392a;min-height:48px;transition:background .18s,transform .18s}
+.classroom-button .note-icon{width:22px;height:26px}
+.classroom-button>span:last-child{margin-left:8px}
+.classroom-button:hover{background:#3d654e;transform:translateY(-1px)}
+.classroom-button:active{transform:translateY(2px);box-shadow:none}
+.board-link{display:inline-flex;align-items:center;justify-content:center;gap:12px;color:#31513f;font-size:12px;font-weight:600;padding:12px 0;border-bottom:1px solid #aeb8a5}
+.board-link:hover{color:#96643b;border-color:#96643b}
+.hero-postscript{display:flex;align-items:center;gap:10px;font-size:9px;color:#818375;margin-top:27px}
+.hero-postscript>span{font-size:24px;color:#9a7a4f}
+.hero-board-wrap{position:relative;padding:19px 0 28px}
+.board-corner-label{font:8px/1.8 var(--site-font);letter-spacing:1.5px;color:#73776a;margin:0 0 13px 4px;transform:rotate(-1deg)}
+.hero-chalkboard{position:relative;isolation:isolate;min-height:475px;background-color:#2b5143;background-image:radial-gradient(ellipse at 70% 30%,#57735b55,transparent 70%),repeating-linear-gradient(0deg,#ffffff03 0 1px,transparent 1px 4px);border:12px solid #b78958;outline:1px solid #90683e;box-shadow:inset 0 0 0 3px #8d6039,inset 0 0 45px #102c3055,8px 13px 0 #dcd6c380;transform:rotate(1.5deg);color:#f3f0da;padding:24px 27px 50px}
+.chalkboard-date{font-family:var(--site-font);font-style:italic;font-size:13px;letter-spacing:.5px;text-align:right;opacity:.85;border-bottom:1px solid #e4e9ce44;padding-bottom:14px}
+.chalkboard-title{font-family:var(--site-font);font-size:29px;font-style:italic;line-height:1.45;margin-top:19px;text-shadow:1px 0 #e4e8cf66}
+.chalkboard-title>span{font-size:23px}
+.chalk-star{position:absolute;font:40px var(--site-font);color:#f5de92}
+.star-one{right:30px;top:93px;transform:rotate(12deg)}
+.star-two{right:73px;top:142px;font-size:23px}
+.sample-note{position:absolute;padding:25px 18px 20px;box-shadow:3px 6px 9px #122d3277;color:#55472e;width:48%;max-width:220px;min-height:194px}
+.sample-note small{font-size:7px;letter-spacing:1px;color:#756342}
+.sample-note p{font:italic 18px/1.65 var(--site-font);margin:12px 0}
+.sample-yellow{background:#f9e99f;left:28px;top:186px;transform:rotate(-7deg)}
+.sample-pink{background:#efc4ca;right:24px;top:208px;transform:rotate(6deg);color:#67424e}
+.sample-sign{font-size:8px}
+.sample-tape,.note-tape{position:absolute;top:-11px;left:calc(50% - 34px);width:68px;height:23px;background:#ead3a6bc;transform:rotate(-5deg);box-shadow:0 1px 2px #644b2422}
+.sample-heart{display:block;font:34px/1 var(--site-font);color:#a15d6d;text-align:right}
+.chalk-doodle{position:absolute;left:26px;bottom:29px;font:italic 26px var(--site-font);color:#f6ecd1;transform:rotate(-9deg)}
+.chalk-doodle span{font-size:16px;margin-left:12px;color:#f4d48e}
+.chalkboard-bottom{position:absolute;bottom:20px;right:18px;font-size:8px;max-width:68%;text-align:right;color:#dde2ca}
+.chalkboard-bottom>span{display:block;font:italic 16px var(--site-font);margin-top:5px}
+.chalk-tray,.community-tray{position:absolute;bottom:-18px;left:-19px;right:-19px;height:16px;background:#c79d6c;border:1px solid #96693b;border-bottom:5px solid #9a7045;box-shadow:0 7px 8px #44351733}
+.chalk-tray i,.community-tray i{position:absolute;bottom:9px;right:30px;width:36px;height:7px;background:#f7f2df;transform:rotate(-5deg);border-radius:2px}
+.chalk-tray i+i,.community-tray i+i{right:74px;width:27px;background:#f2d5b5;transform:rotate(3deg)}
+.chalk-tray b,.community-tray b{position:absolute;left:25px;bottom:10px;width:58px;height:19px;border-bottom:6px solid #d6b994;background:#6b5f4d;transform:rotate(-3deg)}
+.board-caption{text-align:right;font:italic 12px/1.8 var(--site-font);color:#817b66;margin:25px 12px 0}
+.board-caption>span{font-size:25px;margin-right:9px}
+.gratitude-ribbon{display:flex;justify-content:center;align-items:center;gap:36px;padding:19px 20px;border-top:1px solid #dedacb;border-bottom:1px solid #dedacb;background:#f0eedf;font-size:9px;letter-spacing:1.8px;color:#6e765f;white-space:nowrap}
+.gratitude-ribbon i{font-size:15px;font-style:normal;color:#a7804d}
+.teachers-how{max-width:1240px;margin:auto;padding:83px 5%}
+.teachers-section-heading{text-align:center;margin-bottom:38px}
+.teachers-section-heading h2,.teachers-event-story h2,.teachers-board-invite h2{font-family:var(--site-font);font-weight:400;font-size:32px;line-height:1.4;letter-spacing:-.6px;color:#2f4f3c;margin:0 0 14px}
+.teachers-section-heading>p:last-child{font-size:12px;color:#73796d}
+.teachers-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));list-style:none;padding:0;margin:0;gap:30px}
+.teachers-steps li{border-top:1px solid #c9cdb9;padding:25px 0 0}
+.step-number{display:flex;align-items:center;justify-content:space-between;color:#9a7951;font:italic 21px var(--site-font)}
+.step-number span{color:#58715b;font-size:28px}
+.teachers-steps h3{font-size:15px;font-weight:600;margin:22px 0 12px}
+.teachers-steps p{font-size:11px;line-height:2.1;color:#74786b;margin:0}
+.teachers-event{max-width:1150px;margin:12px auto 70px;padding:0 5%;display:grid;grid-template-columns:.7fr 1fr;gap:90px;align-items:center;scroll-margin-top:35px}
+.event-calendar{position:relative;background:#f5edda;border:1px solid #c4b49a;box-shadow:6px 7px 0 #e3ddcb;text-align:center;transform:rotate(-3deg);padding-bottom:25px}
+.event-calendar::before,.event-calendar::after{content:'';position:absolute;top:-12px;left:22%;width:8px;height:26px;background:#6a705c;border-radius:5px}
+.event-calendar::after{left:auto;right:22%}
+.event-calendar>div{font-size:12px;letter-spacing:3px;background:#d9e1cd;padding:25px 10px 18px;border-bottom:1px solid #bcc6ab}
+.event-calendar>strong{display:block;font:130px/.95 var(--site-font);color:#325440;padding:22px 0 12px;letter-spacing:-7px}
+.event-calendar>span{display:block;font-size:8px;letter-spacing:1px}
+.event-calendar>p{font:italic 17px/1.7 var(--site-font);color:#8d704b;margin:23px 0 0}
+.teachers-event-story>p:not(.edition-label){font-size:12px;line-height:2.1;color:#74776b;margin:17px 0}
+.teachers-event-story .board-link{margin-top:5px}
+.teachers-board-invite{max-width:1180px;margin:0 auto 75px;background:#e9eddf;padding:37px 40px;display:flex;align-items:center;justify-content:space-between;gap:30px;border:1px solid #cfd6be}
+.teachers-board-invite .edition-label{margin-bottom:10px}
+.teachers-board-invite h2{font-size:27px}
+.teachers-board-invite p:last-child{font-size:11px;color:#6b7764;max-width:580px;line-height:2}
+.teachers-board-invite .classroom-button{flex-shrink:0}
+footer{background:#f0eee2;border-top:1px solid #dcd9c8;color:#67705f;font-size:8px;gap:20px;padding:28px 5%}
+.footer-brand{gap:12px}
+.footer-brand small{font-size:8px;color:#7f826f;margin-top:6px}
+.footer-brand .note-icon{width:25px;height:30px}
+.sticky-note{position:relative;isolation:isolate;background-color:var(--note-paper,#fff0a8);color:var(--note-ink,#493e25);padding:40px 29px 24px;border:1px solid var(--note-edge,#e0c764);border-top:0;box-shadow:3px 7px 12px #554b3226;width:100%;max-width:470px;margin:10px auto 15px;min-height:385px;text-align:left;overflow-wrap:anywhere}
+.note-topline{display:flex;justify-content:space-between;gap:10px;font-size:7px;font-weight:600;letter-spacing:1.3px;border-bottom:1px solid #68593133;padding-bottom:12px;opacity:.8}
+.sticky-note h2{font-family:var(--site-font);font-weight:400;font-size:27px;line-height:1.5;letter-spacing:-.5px;margin:24px 0 13px}
+.note-stickers{position:absolute;inset:0;z-index:2;margin:0;padding:0;pointer-events:none}
+.note-sticker{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 auto;transform:rotate(-8deg);filter:drop-shadow(0 2px 1px #493e251c);pointer-events:none;user-select:none}
+.note-sticker img{display:block;width:100%;height:100%;object-fit:contain}
+.note-stickers .note-sticker{position:absolute;width:64px;height:64px;top:-30px;left:-14px}
+.note-stickers .note-sticker:nth-child(2){top:auto;left:auto;right:-14px;bottom:-28px;transform:rotate(6deg)}
+.sticky-note .note-tape{height:25px;top:-12px;background-color:#e6c995ba;background-image:repeating-linear-gradient(90deg,#fff8df22 0 2px,transparent 2px 5px);clip-path:polygon(2% 0,98% 2%,96% 15%,100% 30%,96% 45%,100% 60%,97% 76%,99% 98%,1% 100%,3% 84%,0 66%,4% 51%,0 34%,4% 18%)}
+.note-message{font-family:var(--site-font);font-size:18px;line-height:1.9;white-space:pre-wrap;margin:10px 0 28px}
+.note-signature{font-size:10px;line-height:1.9;margin:20px 0 28px}
+.note-signature strong{font-weight:600}
+.note-bottom{display:flex;justify-content:space-between;gap:12px;border-top:1px dashed #6a5c3a55;padding:13px 24px 0 0;font-size:7px;letter-spacing:1px}
+.classroom-community{max-width:1440px;padding:40px 5% 45px;margin:auto}
+.board-page-heading{display:flex;align-items:center;justify-content:space-between;gap:25px;margin-bottom:28px}
+.board-page-heading .edition-label{margin-bottom:10px}
+.board-page-heading h1{font:400 38px/1.3 var(--site-font);margin:0 0 9px}
+.board-page-heading p:last-child{font-size:12px;color:#777d6d;margin:0}
+.community-chalkboard{position:relative;min-height:560px;background:#2c5143;background-image:radial-gradient(ellipse at 30% 25%,#6a826133,transparent 75%),repeating-linear-gradient(0deg,#ffffff03 0 1px,transparent 1px 5px);border:13px solid #ae8252;outline:1px solid #8d6339;box-shadow:inset 0 0 0 3px #8a603b,inset 0 0 50px #092e2866,4px 5px 0 #d8d0b9;padding:25px 28px 45px}
+.board-chalk-heading{display:flex;justify-content:space-between;align-items:center;gap:15px;color:#ecebd5;font:italic 22px/1.5 var(--site-font);border-bottom:1px solid #e0e8d033;padding-bottom:19px}
+.board-chalk-heading>span:last-child{font-size:14px;white-space:nowrap}
+.board-notes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:33px 23px;padding-top:35px;align-items:start}
+.board-note-button{display:block;padding:0;text-align:left;min-width:0;width:100%;color:inherit;transform:rotate(-2deg);transition:transform .18s}
+.board-note-button:nth-child(3n+2){transform:rotate(2deg)}
+.board-note-button:nth-child(4n){transform:rotate(-1deg)}
+.board-note-button:hover,.board-note-button:focus-visible{transform:translateY(-7px) rotate(0);z-index:2}
+.note-compact{max-width:none;min-height:205px;height:230px;padding:25px 15px 15px;margin:0;box-shadow:2px 5px 7px #102b2a55}
+.note-compact .note-tape{width:46px;height:19px;left:calc(50% - 23px);top:-9px}
+.note-compact .note-topline{font-size:5px;letter-spacing:.6px;padding-bottom:7px}
+.note-compact h2{font-size:16px;margin:13px 0 5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.note-compact .note-stickers{font-size:17px;min-height:12px;gap:7px;margin:0}
+.note-compact .note-message{font-size:12px;line-height:1.7;margin:5px 0 8px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.note-compact .note-signature{font-size:7px;margin:9px 0;line-height:1.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.note-compact .note-bottom{display:none}
+.empty-board{text-align:center;max-width:520px;margin:60px auto 70px;color:#e4e8d4}
+.empty-board>.note-icon{width:56px;height:62px;margin:0 auto 20px;transform:rotate(-8deg)}
+.empty-board h2{font:400 27px/1.6 var(--site-font)}
+.empty-board p{font-size:11px;line-height:2;color:#c6d2be}
+.empty-board .classroom-button{background:#e8d59f;color:#294635;border-color:#c3aa71;margin-top:15px}
+.board-loading,.board-unavailable{text-align:center;color:#ecebd5;font-size:13px;padding:50px 15px}
+.board-pagination{display:flex;justify-content:center;align-items:center;gap:30px;margin:30px 0 0;font-size:11px}
+.board-privacy{text-align:center;color:#727b69;margin-top:30px}
+.classroom-community .community-tray{bottom:-18px;left:-20px;right:-20px}
+.maker.page-wrap{--maker-ink:#355443;--maker-rose:#d9e1cb;--maker-sage:#c7d4ad;--maker-paper:#fbf7e9;--maker-shadow:#d8d4c0;--maker-mono:var(--site-font);--maker-pixel:var(--site-font);background-image:linear-gradient(90deg,#b5b99a15 1px,transparent 1px),linear-gradient(#b5b99a15 1px,transparent 1px);background-size:24px 24px}
+.maker>.section-heading{background:transparent;border-bottom:1px solid #cbd0bc}
+.maker>.section-heading h1{font-family:var(--site-font);font-size:35px;font-weight:400;letter-spacing:-1px;text-shadow:none;color:#2d513d}
+.maker>.section-heading .eyebrow{color:#8c704e;font-size:9px}
+.maker>.section-heading p{color:#6e7768}
+.maker .progress:before{content:'LỜI TRI ÂN CỦA BẠN';font-size:9px;color:#64765c}
+.maker .progress li{border:1px solid #c8cdb9;background:#f2f1e5;color:#6b745f;box-shadow:2px 2px 0 #dcdcca}
+.maker .progress li.active{background:#dfe7d1;border-color:#637b58;color:#36533c;box-shadow:3px 3px 0 #b6c4a2}
+.maker .progress li.active button>span:first-child,.maker .progress li.done button>span:first-child{background:#c5d1af;color:#355039;border-color:#869a70}
+.maker .progress button>span:last-child{font-size:11px}
+.maker .progress small,.maker .progress li.active small{color:#747c68}
+.maker .maker-panel{border:1px solid #9aa68a;background:#fcfaef;box-shadow:5px 5px 0 #d9ddc9}
+.maker .maker-panel .panel-label{background:#dde5d0;border-bottom:1px solid #9aa68a;color:#3d5a41;box-shadow:none}
+.maker-step-code{border-color:#a3b093}
+.maker .maker-panel h2{font-family:var(--site-font);font-size:26px;letter-spacing:-.4px;font-weight:400;color:#34563f}
+.maker .maker-panel>.muted{color:#717b67;font-size:11px;line-height:2}
+.maker .pixel-button{background:#315740;color:#fff7df;border:1px solid #31513b;box-shadow:3px 3px 0 #23422d;font-size:11px;font-weight:600}
+.maker .pixel-button:hover{background:#45694e;color:#fff7df;box-shadow:4px 4px 0 #23422d}
+.maker .pixel-button.secondary{background:#f1e7cc;color:#6e5b3f}
+.maker .form-actions .text-link,.maker .maker-editor-jump,.maker-preview-jump{color:#647951}
+.maker .editor label:not(.checkbox){color:#425b40;font-size:12px}
+.maker .editor input:not([type=checkbox]),.maker .editor textarea{border:1px solid #b8c0a5;background:#fffdf4;box-shadow:inset 1px 2px 0 #e9eadb;color:#364d37}
+.maker .editor input:focus,.maker .editor textarea:focus{outline:2px solid #80976a}
+.maker .inspiration button{border:1px solid #b3bea0;background:#e9eddd;box-shadow:2px 2px 0 #c9d0bb;color:#47603e;font-size:10px}
+.maker .checkbox input{border-color:#8a9b75}
+.maker .checkbox input:checked{background:#c6d2ad}
+.maker .checkbox input:checked:after{color:#34533a}
+.maker .privacy-note{color:#78816d}
+.maker .form-actions{border-top:1px dashed #ccd0bc}
+.maker .preview-column{padding-top:7px}
+.note-color-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:24px 0}
+.note-color-options button{position:relative;min-width:0;border:1px solid #d3d6c3;background:#f7f6e9;padding:18px 8px 15px;display:flex;flex-direction:column;align-items:center;gap:12px;font-size:11px;color:#5b6b50}
+.note-color-options button.selected,.note-paper-options button.selected{border:2px solid #5d7950;background:#eaf0dd;padding:17px 7px 14px}
+.color-note{display:block;transform:rotate(-6deg)}
+.color-note .note-icon{width:48px;height:53px;color:var(--swatch)}
+.note-color-options button b,.note-paper-options button b{position:absolute;top:5px;right:7px;font-size:11px;color:#466a3d}
+.note-writing-tip{border-top:1px dashed #cbd1bb;padding:15px 0 0;display:flex;align-items:center;gap:13px;color:#718061}
+.note-writing-tip>span{font:30px var(--site-font)}
+.note-writing-tip>p{font-size:10px;line-height:2;margin:0}
+.note-paper-options{display:grid;gap:12px;margin:24px 0}
+.note-paper-options button{display:flex;position:relative;align-items:center;gap:21px;background:#f7f5e8;border:1px solid #cbd2b9;padding:12px;font-size:12px;color:#45613c}
+.note-paper-options button.selected{padding:11px}
+.paper-swatch{position:relative;width:70px;height:70px;display:block;flex-shrink:0}
+.maker .decoration-options button{border:1px solid #cbd3bc;background:#f2f2e3;box-shadow:2px 2px 0 #dce0cd;color:#526746}
+.maker .decoration-options button.selected{border-color:#76945d;background:#e4ebd3;box-shadow:2px 2px 0 #b6c7a2}
+.maker .decoration-options button:hover:not(:disabled){border-color:#6d8a56;background:#e8eedb}
+.maker .decoration-options b{background:#7c9364;color:#fff9e5;border-color:#657e50}
+.maker .decoration-options .note-sticker{width:46px;height:46px;transition:transform .18s ease,filter .18s ease}
+.maker .decoration-options button:nth-child(even) .note-sticker{transform:rotate(7deg)}
+.maker .decoration-options button:hover:not(:disabled) .note-sticker{transform:translateY(-3px) rotate(0);filter:drop-shadow(0 4px 2px #493e2526)}
+.maker .decoration-options button.selected .note-sticker{transform:rotate(0)}
+.maker .decoration-options button:disabled .note-sticker{filter:grayscale(.4)}
+.maker .decoration-summary{color:#728462}
+.maker .preview-column>p{color:#818771}
+.bloom-stage>.note-icon{width:110px;height:125px;animation:note-arrives .8s ease-out both}
+.bloom-stage h2{color:#446344;font:26px var(--site-font)}
+@keyframes note-arrives{from{opacity:0;transform:translateY(25px) rotate(-12deg)}to{opacity:1;transform:translateY(0) rotate(-3deg)}}
+.result-columns .panel{border-color:#b6c1a2;background:#faf8ed;box-shadow:4px 4px 0 #dce2cb}
+.result-columns .panel h2{color:#35573e;font-family:var(--site-font)}
+.result-columns .panel>p{color:#697962}
+.pixel-button.primary{background:#32583f;border-color:#335339;color:#fff7df;box-shadow:3px 3px 0 #29482f}
+.pixel-button.secondary{background:#f1ead6;border-color:#9caa87;color:#49623f;box-shadow:3px 3px 0 #a7b094}
+.panel .text-link,.received .text-link{color:#5c754c}
+.card-dialog{width:min(800px,calc(100vw - 24px));height:min(800px,calc(100svh - 24px));height:min(800px,calc(100dvh - 24px));max-width:calc(100vw - 24px);max-height:calc(100svh - 24px);max-height:calc(100dvh - 24px);padding:44px 0 0;overflow:visible}
+.card-dialog::backdrop{background:#152f2bd1;backdrop-filter:blur(3px)}
+.card-dialog .note-viewport{position:relative;width:100%;height:100%;padding:0;overflow:visible}
+.card-dialog .sticky-note{position:absolute;top:50%;left:50%;width:470px;max-width:none;margin:0;transform:translate(-50%,-50%) scale(var(--note-dialog-scale,0));transform-origin:center}
+@media(prefers-reduced-motion:no-preference){
+ .card-dialog[open]::backdrop{animation:note-dialog-backdrop .22s ease-out both}
+ .card-dialog[open][data-closing=true]::backdrop{animation:note-dialog-backdrop-out .34s ease-in both}
+}
+@keyframes note-dialog-backdrop{from{opacity:0}to{opacity:1}}
+@keyframes note-dialog-backdrop-out{from{opacity:1}to{opacity:0}}
+.card-dialog[data-closing=true] .close-modal{visibility:hidden}
+.close-modal{top:0;right:0;width:44px;height:44px;color:#f5f0db;z-index:5}
+.received .section-heading h1{font:32px/1.5 var(--site-font);color:#34533d}
+.received .section-heading .eyebrow{color:#8c7654}
+.received .sticky-note{margin-bottom:30px}
+.toast{border-color:#8f9c78;color:#405539;background:#f4f3df;box-shadow:4px 4px 0 #b9c3a4}
+.music-invitation{filter:sepia(.15)}
+@media(min-width:1500px){.teachers-hero{padding-top:100px;padding-bottom:100px}.hero-chalkboard{min-height:510px}.sample-note{top:210px}.sample-pink{top:233px}}
+@media(max-width:1100px){.site-header{gap:20px}.site-header nav{gap:20px}.teachers-hero{gap:30px;padding-top:55px;padding-bottom:55px}.hero-editorial h1{font-size:43px}.hero-chalkboard{padding:20px;min-height:450px}.chalkboard-title{font-size:26px}.chalkboard-title>span{font-size:20px}.sample-note{width:47%;padding:22px 13px 17px}.sample-note p{font-size:15px}.sample-yellow{left:18px}.sample-pink{right:15px}.chalkboard-bottom{font-size:6px}.teachers-actions{gap:20px}.teachers-event{gap:55px}.teachers-board-invite{margin-left:5%;margin-right:5%}.board-notes{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:850px){.site-header{height:auto;min-height:108px;flex-wrap:wrap;padding:14px 5% 0;gap:0}.brand>span{font-size:23px}.site-header .sound{margin-left:auto}.site-header nav{order:3;width:100%;height:43px;justify-content:space-between;margin:6px 0 0;gap:8px}.site-header nav button{font-size:10px}.teachers-hero{grid-template-columns:1fr;gap:30px;max-width:700px;padding:45px 6% 42px}.hero-editorial h1{font-size:clamp(39px,7.3vw,57px)}.teachers-description{max-width:520px}.school-kicker{margin-bottom:23px}.hero-board-wrap{max-width:550px;width:100%;margin:auto;padding-top:0}.hero-chalkboard{min-height:475px}.sample-note{width:45%;padding:25px 20px 20px}.sample-note p{font-size:18px}.sample-yellow{left:30px}.sample-pink{right:30px}.chalkboard-title{font-size:30px}.chalkboard-title>span{font-size:23px}.gratitude-ribbon{justify-content:flex-start;overflow:hidden;font-size:8px;gap:24px}.teachers-event{gap:35px;padding:0 6%}.event-calendar>strong{font-size:105px}.event-calendar>span{font-size:6px}.teachers-event-story h2{font-size:27px}.teachers-board-invite{padding:28px;flex-wrap:wrap}.board-notes{grid-template-columns:repeat(3,minmax(0,1fr));gap:30px 20px}.board-chalk-heading{font-size:18px}.board-chalk-heading>span:last-child{font-size:11px}.board-page-heading h1{font-size:32px}.board-page-heading .classroom-button{font-size:10px;padding:12px}.board-page-heading .edition-label{font-size:7px}}
+@media(max-width:600px){.teachers-hero{padding-top:35px;gap:35px}.hero-editorial h1{letter-spacing:-1.7px;margin-bottom:22px}.edition-label{font-size:8px;letter-spacing:1.5px;margin-bottom:15px}.school-kicker{font-size:8px;letter-spacing:1.2px;gap:8px}.teachers-lead{font-size:13px}.teachers-description{font-size:11px;line-height:2}.teachers-actions{gap:17px}.classroom-button{font-size:11px;padding:13px 16px}.board-link{font-size:11px}.hero-postscript{font-size:8px;margin-top:22px}.hero-chalkboard{border-width:9px;min-height:408px;padding:16px}.chalkboard-date{font-size:10px}.chalkboard-title{font-size:25px;margin-top:17px}.chalkboard-title>span{font-size:20px}.board-corner-label{font-size:6px;letter-spacing:1px}.sample-note{top:165px;width:47%;min-height:173px;padding:21px 11px 16px}.sample-note p{font-size:14px;line-height:1.65}.sample-note small{font-size:6px;letter-spacing:.5px}.sample-yellow{left:13px}.sample-pink{right:10px;top:186px}.sample-sign{font-size:6px}.sample-heart{font-size:25px}.sample-tape{width:50px;height:18px;left:calc(50% - 25px);top:-8px}.star-one{right:17px;top:78px;font-size:28px}.star-two{right:35px;top:118px;font-size:18px}.chalk-doodle{font-size:22px;bottom:23px;left:17px}.chalkboard-bottom{font-size:5px;right:12px;bottom:13px}.chalkboard-bottom>span{font-size:13px}.board-caption{font-size:11px;margin-top:22px}.teachers-how{padding:50px 6%}.teachers-section-heading h2{font-size:27px}.teachers-section-heading>p:last-child{font-size:10px;line-height:1.9}.teachers-steps{grid-template-columns:1fr;gap:26px}.teachers-steps li{padding-top:20px}.teachers-steps h3{margin-top:14px;font-size:15px}.teachers-steps p{font-size:11px}.teachers-event{grid-template-columns:1fr;gap:40px;margin-bottom:50px}.event-calendar{max-width:290px;width:85%;margin:auto}.event-calendar>strong{font-size:120px}.event-calendar>span{font-size:7px}.teachers-event-story h2{font-size:30px}.teachers-event-story>p:not(.edition-label){font-size:11px}.teachers-board-invite{padding:25px;margin-bottom:45px;gap:15px}.teachers-board-invite h2{font-size:25px}.teachers-board-invite .edition-label{font-size:7px}.teachers-board-invite p:last-child{font-size:10px}.classroom-community{padding:28px 4% 35px}.board-page-heading{flex-wrap:wrap;gap:18px}.board-page-heading .classroom-button{min-height:42px}.board-page-heading p:last-child{font-size:10px}.community-chalkboard{padding:18px 13px 35px;border-width:9px;min-height:480px}.board-chalk-heading{font-size:16px;gap:10px;flex-wrap:wrap;padding-bottom:15px}.board-chalk-heading>span:last-child{font-size:10px}.board-notes{grid-template-columns:repeat(2,minmax(0,1fr));gap:29px 14px;padding-top:30px}.note-compact{height:230px;padding:25px 12px 13px}.note-compact h2{font-size:16px}.note-compact .note-message{font-size:12px}.empty-board{margin:45px auto 55px}.empty-board h2{font-size:24px}.empty-board p{font-size:10px}.board-pagination{gap:22px;font-size:10px}.board-privacy{font-size:8px;line-height:1.9;padding:0 12px}.sticky-note:not(.note-compact){padding:37px 23px 23px}.sticky-note h2{font-size:25px}.note-message{font-size:17px}.note-topline{font-size:6px;letter-spacing:.8px}.note-bottom{font-size:6px}.maker>.section-heading h1{font-size:30px}.maker .progress button>span:last-child{font-size:8px}.maker .progress{gap:4px}.maker .maker-panel h2{font-size:25px}.maker .maker-panel{padding:22px 18px}.maker .maker-panel>.muted{font-size:10px}.note-color-options{gap:9px}.note-color-options button{font-size:10px;padding:17px 5px 14px}.note-color-options button.selected{padding:16px 4px 13px}.color-note .note-icon{width:42px;height:48px}.maker .step-actions .primary{font-size:10px}.maker .form-actions .primary{min-width:0;font-size:10px}.maker .form-actions{flex-wrap:wrap}.maker .form-actions .text-link{font-size:10px}.note-paper-options button{font-size:11px}footer{padding:25px 6%;gap:16px}.footer-brand small{max-width:240px}.received .section-heading h1{font-size:27px}}
+@media(prefers-reduced-motion:reduce){.classroom-button,.board-note-button{transition:none}.bloom-stage>.note-icon{animation:none}}
+
+/* Keep compact notes inside their paper at every breakpoint. */
+.sticky-note.note-compact{display:flex;flex-direction:column;height:265px;min-height:265px}
+.sticky-note.note-compact .note-topline{flex-shrink:0}
+.sticky-note.note-compact h2{font-size:16px;line-height:1.45;flex-shrink:0;margin:12px 0 5px}
+.sticky-note.note-compact .note-stickers{margin:0;padding:0}
+.note-compact .note-stickers .note-sticker{width:42px;height:42px;top:-21px;left:-10px}
+.note-compact .note-stickers .note-sticker:nth-child(2){top:auto;left:auto;right:-10px;bottom:-18px}
+.sticky-note.note-compact .note-message{font-size:12px;line-height:1.75;margin:6px 0 10px;max-height:63px;flex-shrink:0}
+.sticky-note.note-compact .note-signature{font-size:7px;margin: auto 0 0;padding-right:28px;line-height:1.7;flex-shrink:0}
+/* The paper silhouette stays behind the writing and never clips stickers. */
+.note-viewport{max-width:100%;overflow:auto;padding:18px}
+.note-viewport-fitted{position:relative;width:100%;aspect-ratio:1;padding:0;overflow:visible}
+.note-viewport-fitted .sticky-note{position:absolute;top:50%;left:50%;width:calc(100% / 1.2);margin:0;transform:translate(-50%,-50%) scale(var(--note-preview-scale,0));transform-origin:center}
+.result-columns>div{min-width:0}
+.sticky-note,.sticky-note:not(.note-compact),.sticky-note.note-compact{display:block;aspect-ratio:1;height:auto;min-height:0;padding:0;border:0;background:transparent;box-shadow:none}
+.note-paper-shape{position:absolute;inset:0;width:100%;height:100%;z-index:-1;overflow:visible;filter:drop-shadow(0 1px .5px #4f402d30) drop-shadow(2px 5px 3px #4f402d22) drop-shadow(5px 13px 9px #4f402d12);pointer-events:none}
+.paper-swatch .note-paper-shape{z-index:auto}
+.paper-swatch{isolation:isolate}
+.paper-swatch .note-paper-shape{filter:drop-shadow(1px 2px 1px #4f402d30) drop-shadow(2px 4px 3px #4f402d14)}
+.sticky-note .note-content{position:absolute;top:var(--shape-top);bottom:var(--shape-bottom);left:var(--shape-left);right:var(--shape-right);min-width:0;display:flex;align-items:center}
+.note-writing{display:flow-root;width:100%;font-size:15px}
+.sticky-note h2{font-size:1.4em;line-height:1.45;letter-spacing:0;margin:.6em 0 .5em}
+.sticky-note .note-message{font-size:1em;line-height:1.8;margin:.5em 0 1em}
+.sticky-note .note-topline{flex-wrap:wrap;gap:.6em;font-size:.4em;letter-spacing:.05em;padding-bottom:1em}
+.sticky-note .note-signature{font-size:.6em;margin:1em 0}
+.sticky-note .note-bottom{flex-wrap:wrap;gap:.7em;font-size:.4em;letter-spacing:.05em;padding:1em 0 0}
+.sticky-note .note-tape{top:var(--tape-y);left:var(--tape-x);width:clamp(22px,18%,76px);height:auto;aspect-ratio:2.8;transform:translate(-50%,-50%) rotate(var(--tape-rotation));opacity:.85;background-color:#dec49a9c;background-image:linear-gradient(175deg,#fff6d95c,#d6b77b22 55%,#ab895027),repeating-linear-gradient(90deg,#fff8df15 0 1px,transparent 1px 3px);box-shadow:0 1px 1px #6b522320,inset 0 1px 0 #fff8df66}
+.sticky-note .note-stickers .note-sticker{top:var(--sticker-1-y);left:var(--sticker-1-x);right:auto;bottom:auto;width:var(--note-sticker-size);height:auto;aspect-ratio:1;transform:translate(-50%,-50%) rotate(var(--sticker-1-rotation))}
+.sticky-note .note-stickers .note-sticker:nth-child(2){top:var(--sticker-2-y);left:var(--sticker-2-x);right:auto;bottom:auto;transform:translate(-50%,-50%) rotate(var(--sticker-2-rotation))}
+.sticky-note.note-compact .note-writing{font-size:11px}
+.sticky-note.note-compact :is(h2,.note-message,.note-signature){display:block;overflow:visible;-webkit-line-clamp:unset;-webkit-box-orient:initial;text-overflow:clip}
+.sticky-note.note-compact .note-topline{display:none}
+.sticky-note.note-compact h2{font-size:1.2em;line-height:1.4;margin:0 0 .4em}
+.sticky-note.note-compact .note-message{font-size:1em;line-height:1.6;margin:0 0 .5em;max-height:none}
+.sticky-note.note-compact .note-signature{font-size:.65em;margin:.5em 0 0;padding:0;white-space:normal}
+.note-compact .note-stickers .note-sticker{width:var(--note-sticker-size)}
+@media(max-width:600px){.note-writing{font-size:14px}.sticky-note.note-compact .note-writing{font-size:10px}}
+@media(forced-colors:none){::-webkit-scrollbar-thumb{background:#acbc96;border-color:#738663;box-shadow:inset 2px 2px 0 #e5ebd6,inset -2px -2px 0 #849b70}::-webkit-scrollbar-thumb:hover{background:#bdcba9}::-webkit-scrollbar-thumb:active{background:#92a77d;box-shadow:inset 2px 2px 0 #768c61,inset -2px -2px 0 #dce5cb}::-webkit-scrollbar-track{border-color:#b0b79e}}
+.site-header nav button[aria-current=page]:after{background:#658157}
+@media(prefers-reduced-motion:reduce){.maker .decoration-options .note-sticker{transition:none}}

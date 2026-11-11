@@ -1,14 +1,8 @@
-# Petals of Code
+# Trạm phát sóng yêu thương · Vietnamese Teachers' Day 20/11
 
-A handcrafted pixel-art greeting-card garden for THCS&THPT Lương Thế Vinh, celebrating Vietnamese Women's Day, **20 October 2026**. The project is created by Lương Thế Vinh Tân Triều Programming Club.
+A Teachers' Day message board for THCS&THPT Lương Thế Vinh, created by Lương Thế Vinh Tân Triều Programming Club.
 
-**This project has not been deployed.** It is prepared for your later Vercel deployment with Neon Postgres.
-
-## Music player
-
-The cassette button in the bottom-right corner opens **PETALS MIX**, a fully custom retro player with Ai Ngoài Anh (VSTRA, Tyronee), Và Thế Giới Đã Mất Đi Một Người Cô Đơn (marzuz, Changg), Chăm Hoa (MONO), and Đã Lỡ Yêu Em Nhiều (JustaTee). Full MP3 files supplied by the user live in `public/audio`; playback uses the browser's audio engine and does not require Spotify. Controls include centered previous, play/pause, and next buttons, seeking with real timestamps, volume/mute, and repeat-one in the song title display. Finished tracks advance to the next song, and the last track stops unless repeat-one is enabled. Playback continues when minimized and while moving between the home page, card creator, and garden. Music starts when the visitor first clicks the cassette, or uses the player controls. Page clicks and keypresses do not start music. A dismissible invitation points to the cassette until it is opened or dismissed for the current browsing session. Cassette reels and level indicators animate only during playback and respect reduced-motion preferences.
-
-Edit the `tracks` array in `app/music-player.tsx` to replace songs and audio paths. No Spotify API key or database migration is needed. The header sound toggle controls the site's existing chime effects separately.
+Students create pastel sticky notes, choose a classic square, heart, star or leaf and up to two stickers at diagonal corners, then write a message for a teacher. Shapes keep their proportions while text sizes down to fit, including in PNG exports. Every submitted note is automatically sent to moderation for the shared classroom chalkboard. Notes can also be shared by URL or downloaded as PNG or QR. Public notes appear only after moderator approval.
 
 ## Run locally
 
@@ -20,81 +14,71 @@ npm ci
 npm run dev
 ```
 
-Open the local URL printed by Next.js. You can explore the artwork, flower choices, themes, and live preview without a database. Saving cards, sharing links, the school garden, and moderation require Neon. The app reports this explicitly; it never pretends an unsaved card has a working sharing URL.
+## Database
 
-## Configure Neon
+Persisted flower/theme/decorations keys are retained internally as note color, shape, and sticker choices; existing saved links and their message content continue to work. **Existing databases need `005_learning_stickers.sql` and `006_literature_sticker.sql` before saving the new learning-themed stickers, and `007_note_shapes.sql` before saving heart-shaped notes.** These expand the allowed keys and preserve existing notes.
 
-**Upgrading an existing database for the expanded flowers and decorations:** run `database/migrations/001_flower_decorations.sql` in the Neon SQL Editor before using the updated app. This preserves existing cards and gives them an empty decoration selection. Do not rerun `schema.sql` on an existing database. Fresh databases should use the updated `schema.sql` instead.
+For an empty database, run `database/schema.sql` once in the Neon SQL Editor. It creates `cards`, `rate_limits`, constraints and indexes. Do not replay it against existing tables.
 
-**Latest upgrade:** after migration 001, run `002_more_decorations.sql` and then `003_garden_positions.sql` in the Neon SQL Editor. These preserve your cards, enable bees/paper cranes/music, and store each user's chosen garden position. If 001 is already applied, only run 002 and 003. Fresh databases need only the current `schema.sql`.
+For an older database, apply only outstanding migrations in order:
 
-1. Create a Neon project and database. Use a separate branch/database for local development and tests if you also have production data.
-2. Open the Neon SQL Editor and run **`database/schema.sql` once** against the empty application database. It creates `cards`, `rate_limits`, constraints, and indexes. Do not replay it against existing tables.
-3. Copy the connection string from Neon's Connect dialog to the server-only `DATABASE_URL` environment variable. Keep `sslmode=require` (and any other connection parameters Neon provides).
-4. Run the app and create a card. Open its link in a second browser to verify persistence before inviting students.
+1. `001_flower_decorations.sql`
+2. `002_more_decorations.sql`
+3. `003_garden_positions.sql`
+4. `004_more_flower_types.sql`
+5. `005_learning_stickers.sql`
+6. `006_literature_sticker.sql`
+7. `007_note_shapes.sql`
+8. `008_automatic_moderation.sql` (updates defaults for new notes; existing notes keep their status)
+9. `009_ai_moderation.sql` (required before deploying automated moderation; adds review metadata without changing existing decisions)
 
-The backend uses the official [Neon serverless driver](https://neon.com/docs/serverless/serverless-driver) with parameterized queries. Browsers never receive the database credentials. No Supabase, Cloudflare D1, Sites account, or custom OAuth provider is required.
-
-## Configure moderation
-
-Set these **server-only** variables in `.env.local`, and later in Vercel Project Settings → Environment Variables:
+Configure these server-only variables in `.env.local` (or the existing `.env`), and in your hosting environment:
 
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | Your Neon Postgres connection string |
-| `ADMIN_PASSWORD` | Unique school garden moderator password, at least 16 characters |
+| `DATABASE_URL` | Neon Postgres connection string; keep its SSL settings |
+| `ADMIN_PASSWORD` | Unique moderator password, at least 16 characters |
 | `ADMIN_SESSION_SECRET` | Independent random secret, at least 32 characters |
-| `CARD_RATE_LIMIT` | Optional, defaults to 20 cards per hour per network identity |
+| `CARD_RATE_LIMIT` | Optional; defaults to 20 notes per hour per network identity |
+| `AUTO_MODERATION_ENABLED` | Defaults to enabled; set exactly `false` to keep every new note pending for manual review |
+| `GEMINI_API_KEY` | Server-only Gemini API key from Google AI Studio; `GOOGLE_GENERATIVE_AI_API_KEY` is also accepted |
+| `MODERATION_MODEL` | Optional Gemini model ID supporting structured output; defaults to `gemini-3.8-flash` |
 
-Generate an independent random value for the password and session secret with your password manager, or run this locally twice:
+Never expose these with `NEXT_PUBLIC_` prefixes. No database credentials are sent to browsers.
 
-```sh
-node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
-```
+## Moderation and privacy
 
-Do not commit `.env.local`, paste secrets into client code, or use `NEXT_PUBLIC_` prefixes. All moderation is denied until both admin variables are configured. Open `/admin` and log in with the configured password. Sessions last one hour and use a signed, HttpOnly, SameSite=Strict cookie (Secure in production). Changing either the password or session secret invalidates existing sessions. Login attempts are limited to five per 15-minute window per network identity.
+Open `/admin` to approve or hide submissions. Every new note is immediately saved with public sharing enabled and pending moderation; there is no private-letter option. The creation API sets these values explicitly, including on databases that still have the old defaults. The sender name is public only when separately permitted. Anonymous notes persist an empty sender name.
 
-The paginated admin queue allows approving and hiding submissions. Hiding a greeting removes it from the public garden; its unique card link remains accessible. This is a small single-moderator interface, not a multi-user identity system.
+Before AI review, a deterministic word filter automatically rejects `dcm`, `vcl`, `dcmm`, `vl`, `vcd`, `vcc`, `cmm`, `bts`, `clm`, `db`, and `cc`, plus selected profanity in English, Spanish, French, German, Portuguese, Russian, Chinese, Japanese, Korean, Arabic, and Hindi (see `lib/word-filter.ts`) in the recipient, message, or displayed sender name. It matches whole terms case-insensitively, including accents, full-width letters, zero-width characters, and separators such as `d.c.m` or `v c l`. This limited list is not comprehensive multilingual moderation; whole-term boundaries deliberately leave embedded words and other contextual cases to AI. It also rejects quoted listed terms before AI review. This filter runs even when AI review is disabled or unavailable. Admins can restore rejected notes; existing notes are not automatically reprocessed.
 
-## Deploy to Vercel when ready
+After saving, the server automatically reviews the public recipient, message, and sender name (only when the sender chose to display it) using AI SDK structured output directly through the Gemini API. The submitting request waits up to ten seconds for the model; it does not rely on a browser follow-up, a timer, or an unawaited background task. Clearly appropriate letters are approved at a model-reported confidence of at least 0.95. Clear offensive language (including profanity, vulgar swearing, slurs, and derogatory names in any public field), spam, abuse, sexual content, threats, or hate are rejected at at least 0.98. The model applies the same policy to all languages and scripts, including mixed-language messages, transliterated insults, and obfuscated spellings. Passages it cannot confidently understand remain pending for human review; help-seeking reports that quote abuse remain pending for human review. Ambiguous content, sensitive personal information, conflicting classifications, and low-confidence results remain pending. Confidence is a model estimate, not a measured guarantee; evaluate real Vietnamese student messages before relying on the thresholds.
 
-1. Push this folder to your Git repository and import it into Vercel.
-2. Select the **Next.js** framework and Node.js **22.x** (or a later supported LTS).
-3. Use `npm ci` to install and `npm run build` to build. Keep Next.js's default output configuration.
-4. Add the environment variables above to the intended Vercel environments. Use a separate Neon branch for Preview deployments if needed.
-5. Apply the SQL schema to the target Neon database before inviting users.
-6. Deploy from Vercel yourself. Ensure the intended audience can access the chosen production domain; deployment protection can prevent recipients from opening links.
+Apply `009_ai_moderation.sql`, set `GEMINI_API_KEY` in `.env.local` (or the existing `.env`) and in your hosting environment, and restart/redeploy to enable live review. Get a key from [Google AI Studio](https://aistudio.google.com/apikey). An empty key keeps new submissions pending; adding the key and restarting enables review without code changes. `GOOGLE_GENERATIVE_AI_API_KEY` is accepted as an alternative. Without credentials, or when a provider times out, refuses, returns malformed data, or fails, submissions are saved successfully and remain pending. No provider error bodies or letter text are logged. Set `AUTO_MODERATION_ENABLED=false` to turn off automatic decisions. The form explains automated review before submission.
 
-Card URLs use the domain on which the card was created. Create final cards on the production domain, not a temporary preview URL. The app uses [Vercel's trusted forwarding header](https://vercel.com/docs/headers/request-headers) for rate limits when `VERCEL=1`. On a local or other deployment, it deliberately uses a shared local rate bucket rather than trusting user-supplied IP headers. Adapt this policy before hosting behind a different proxy.
+The admin page defaults to pending letters, with filters for approved, rejected, or all letters. It shows the latest review source, reason, model, and model-reported confidence. Admins can retry a pending letter, manually approve or reject it, and restore an incorrectly rejected letter. Retries require an authenticated admin session and are rate limited to 30 per hour per network identity. Reviews use a 30-second lease to prevent concurrent model calls; stale attempts can be retried. A late AI response cannot replace a manual decision. Existing letters are not automatically reprocessed; retry pending letters from the admin page if needed.
 
-## Included experience
+Anyone with a note's sharing URL can read it, including private notes; these links are not end-to-end encrypted. Hiding a note removes it from the public board but keeps its sharing URL working. Existing private notes retain their status; the new submission flow does not publish them retroactively.
 
-- Vietnamese interface and correctly rendered Vietnamese text; bundled fonts, no font-service dependency.
-- Custom pixel-grid SVG trees, clouds, flowers, letterbox, and butterfly.
-- Twelve flower sprites (including daisy, lily, lotus, orchid, hydrangea, peony, and cosmos), three backgrounds, live preview, Vietnamese starter messages, optional anonymous sender.
-- Three illustrated pixel landscapes fill the letter canvas: sunny stepped hills and a flower-lined path, cherry trees around a pond and bridge, and a moonlit mountain lake with a glowing cottage. Theme choices show miniature scene previews. A translucent paper panel keeps the message readable, and PNG downloads include the same scenery.
-- Five focused creator panels: flower → background → decorations → content → send. Back navigation keeps all choices. Every flower has a sourced botanical fact and a separately labeled suggested sentiment.
-- Nine combinable pixel decorations: bows, butterflies, hearts, sparkles, fireflies, petals, bees, paper cranes, and musical notes. Choose up to three; selections persist in saved cards, shared links, the school garden, and PNG exports. Bees circle the flower and turn along their route; the bow is tied higher on the stem beneath the bloom.
-- Each decoration has its own animated sprite parts: articulated butterfly wings, heart bursts, star sparks, pulsing firefly lanterns, tumbling petal faces, and unfolding bow loops. Effects use brisk timings (0.48-second butterfly flaps; most scene cycles around 2.6–4 seconds). Each letter has replay and pause controls. Reduced motion defaults to a still scene, with an explicit button to play only that card's effects. PNGs retain a complete still composition; garden thumbnails remain still for performance.
-- Seed-to-bloom reveal, quiet-by-default sound, keyboard controls, and reduced-motion support.
-- Server-persisted UUID card links, downloadable QR codes, and canvas-rendered PNG cards.
-- Opt-in school garden with approved greetings only, 24 flowers per page, and accessible message dialogs.
-- Users choose their garden spot by clicking, dragging, or using arrow keys on a map before public submission. Approved flowers retain those coordinates across reloads. Larger flowers appear in a free garden layout; older cards without coordinates have a stable fallback position.
-- No fabricated participation counts, seed messages, or local-storage-only sharing.
+Moderator sessions use signed HttpOnly cookies and expire after one hour. Login attempts are limited to five per 15 minutes. Card creation is rate limited. On Vercel, trusted forwarding headers identify the network; local/other hosts use a shared rate bucket.
 
-## Privacy and operational behavior
+## Music
 
-- **Anyone with a card's unguessable URL can read it.** The cards are private by obscurity of their bearer links, not end-to-end encrypted. Do not use them for confidential information.
-- Cards start private. Public submission is a separate, explicit opt-in and always enters `pending` moderation.
-- Public opt-in discloses the recipient and message. The sender nickname remains hidden unless separately permitted; direct links to publicly submitted cards also respect that choice.
-- Anonymous cards persist an empty sender name. The API never exposes edit hashes or rate-limit identities.
-- Only the creating page receives the random edit token required to submit a private card. That token is held in memory; reloading loses the ability to submit that card to the garden. The sharing link continues to work.
-- Mutating requests enforce same-origin checks. Server validation and database constraints enforce allowed flowers/themes and message/name limits.
-- Rate-limit keys are HMAC hashes, expire after their windows, and are removed during subsequent successful rate-limit checks. No raw IP addresses are saved.
-- Students on a shared school network share a rate bucket. Review the default `CARD_RATE_LIMIT` for the event's expected traffic.
-- No analytics or external media requests are included. All images and fonts are bundled.
+The existing cassette player and user-supplied audio remain available in `public/audio`. Audio begins only when the visitor opens or operates the player, and persists while navigating between the homepage, creator and chalkboard.
 
-## Checks
+## Key files
+
+- `app/homepage.tsx`, `app/homepage-event.tsx`: Teachers' Day homepage.
+- `app/teachers-day.css`: classroom visual theme and responsive layouts.
+- `app/sticky-note.tsx`, `lib/note-design.ts`: reusable sticky notes and persisted design mappings.
+- `app/maker-panel.tsx`: color, paper, stickers and message editor.
+- `app/petals.tsx`: navigation, chalkboard, sharing and submission flow.
+- `lib/export-letter.ts`, `lib/letter-qr.ts`: PNG and QR exports.
+- `app/api/cards/`, `app/api/admin/`, `lib/server.ts`: Neon storage and moderation.
+- `database/schema.sql`: fresh database setup.
+- `tests/`: backend, creator and compatibility tests.
+
+## Verification
 
 ```sh
 npm run typecheck
@@ -102,21 +86,14 @@ npm test
 npm run build
 ```
 
-The test suite runs the actual route handlers and Postgres schema against an in-memory PGlite database. The Neon transport alone is substituted in tests; no test content is sent to a hosted database. Tests cover persistence, private/pending/approved visibility, sender redaction, opt-in authorization, validation, rate limits, moderator sessions, and missing configuration.
+Backend tests use an isolated in-memory PGlite database. They do not connect to hosted Neon. Verify the real database connection and a cross-device sharing URL after configuring your deployment.
 
-An actual Neon connection and a cross-device test on your final Vercel domain still need to be performed once you configure your credentials and deploy.
+The live moderation smoke test is skipped by default. To explicitly run multilingual moderation cases against Gemini using synthetic letters and an isolated in-memory database, run in PowerShell:
 
-## Key files
+```powershell
+$env:RUN_LIVE_MODERATION='1'
+node --env-file=.env node_modules/vitest/vitest.mjs run tests/moderation-live.test.ts
+Remove-Item Env:RUN_LIVE_MODERATION
+```
 
-- `app/petals.tsx` — garden, creator, preview, exports, sharing.
-- `app/maker-panel.tsx` / `app/maker.css` / `lib/flower-stories.ts` — sequential creator panels and sourced flower stories.
-- `app/garden-placement.tsx` / `lib/garden-position.ts` / `app/garden-size.css` — position picker, persisted coordinates, and larger garden flowers.
-- `app/pixel-art.tsx` / `app/globals.css` — original pixel artwork and responsive design.
-- `app/card-art.tsx` / `app/decoration-animations.css` — decoration sprite parts, particles, and individual animation timelines.
-- `app/letter-scenery.tsx` / `app/letter-scenery.css` — pixel landscape backgrounds, paper overlay, and theme thumbnails.
-- `lib/export-letter.ts` — PNG rendering of the scenery, flower, decorations, and wrapped Vietnamese text.
-- `app/api/cards/route.ts` — card storage, garden queries, public submission.
-- `app/api/admin/` / `app/admin/page.tsx` — authenticated moderation.
-- `lib/server.ts` — Neon connection, request guards, rate limits, sessions.
-- `database/schema.sql` — Neon schema.
-- `tests/backend.test.ts` — backend behavior tests.
+This checks multilingual gratitude and abuse, safeguarding reports, spam rejection, personal-information review, and resistance to instructions embedded in a letter. It does not write test letters to hosted Neon.

@@ -142,14 +142,14 @@ export function MusicPlayer() {
       onEnded={() => {setPlaying(false); if (index < tracks.length - 1) selectTrack(index + 1, true);}}/>
     <section className="music-player" id="garden-music-player" hidden={!open} aria-labelledby="garden-music-title">
       <div className="music-titlebar">
-        <h2 id="garden-music-title"><span aria-hidden="true">♫</span> PETALS MIX</h2>
+        <h2 id="garden-music-title"><span aria-hidden="true">♫</span> THANK YOU MIX</h2>
         <span className="music-titlebar-model">LTPC / 20.10</span>
         <button ref={minimize} type="button" onClick={() => setOpen(false)} aria-label="Thu nhỏ máy nghe nhạc" title="Thu nhỏ">−</button>
       </div>
       <div className="music-body">
         <div className="music-tape">
           <Cassette/>
-          <div><span className="music-pixel-label">PETALS MIXTAPE</span><p>Một chút nhạc,<br/>một chút thương.</p></div>
+          <div><span className="music-pixel-label">THANK YOU MIXTAPE</span><p>Một chút nhạc,<br/>một chút thương.</p></div>
         </div>
         <div className="music-display">
           <div className="music-now">

@@ -2,8 +2,11 @@ import type {CSSProperties} from 'react';
 import type {Decoration} from '../lib/card-validation';
 import {FlowerPixels} from './pixel-art';
 import {BeePixels as Bee,ButterflyPixels} from './insect-art';
+import {noteStickers} from '../lib/note-design';
+import {noteStickerImages} from '../lib/note-sticker-art';
 
 export const decorationNames:Record<Decoration,string>={
+ ...Object.fromEntries(Object.entries(noteStickers).map(([key,{name}])=>[key,name])) as Record<Decoration,string>,
  ribbon:'Nơ dịu dàng',butterflies:'Bươm bướm',hearts:'Trái tim',
  sparkles:'Sao lấp lánh',fireflies:'Đom đóm',petals:'Cánh hoa bay',
  bees:'Ong nhỏ',cranes:'Hạc giấy',music:'Nốt nhạc',
@@ -136,17 +139,18 @@ export function DecorationPixels({type}:{type:Decoration}){
  if(type==='bees')return <Bee/>;
  if(type==='cranes')return <Crane/>;
  if(type==='music')return <Music/>;
+ if(type!=='petals')return <image href={noteStickerImages[type]} width="64" height="64"/>;
  return <Petal/>;
 }
 
-const decorationViewBoxes:Record<Decoration,string>={
+const decorationViewBoxes:Partial<Record<Decoration,string>>={
  ribbon:'-3 -2 19 19',butterflies:'-3 -4 22 22',hearts:'-4 -4 20 20',
  sparkles:'-4 -4 20 20',fireflies:'-6 -5 21 23',petals:'-5 -5 19 19',
  bees:'-3 -2 22 22',cranes:'-2 -4 24 24',music:'-2 -2 26 26',
 };
 
 export function DecorationIcon({type}:{type:Decoration}){
- return <svg viewBox={decorationViewBoxes[type]} width="32" height="32" fill="none" shapeRendering="crispEdges" aria-hidden="true"><DecorationPixels type={type}/></svg>;
+ return <svg viewBox={decorationViewBoxes[type]||'0 0 64 64'} width="32" height="32" fill="none" shapeRendering="crispEdges" aria-hidden="true"><DecorationPixels type={type}/></svg>;
 }
 
 // Sprite geometry is self-contained; CSS animates its parts only in the page.

@@ -1,0 +1,314 @@
+/* A notebook full of thank-yous: ink outlines, warm paper and little pen drawings. */
+:root {
+  --site-font: 'Grandstander', sans-serif;
+  --doodle-ink: #343b37;
+  --doodle-paper: #fffaf0;
+  --doodle-yellow: #f6d879;
+  --doodle-coral: #b64f3e;
+  --doodle-hand:var(--site-font);
+  --doodle-edge: 3px 12px 5px 14px / 12px 4px 13px 5px;
+  --plum: var(--doodle-ink);
+}
+
+body {
+  color: var(--doodle-ink);
+  background-color: var(--doodle-paper);
+  background-image: radial-gradient(#77674c25 .75px, transparent .75px);
+  background-size: 18px 18px;
+}
+
+button:focus-visible, a:focus-visible {
+  outline: 3px dashed var(--doodle-coral);
+  outline-offset: 6px;
+}
+
+.site-header {
+  position: relative;
+  background: var(--doodle-paper);
+  border-bottom: 2px solid var(--doodle-ink);
+}
+
+.brand { color: var(--doodle-ink); }
+.brand > .note-icon { transform: rotate(-9deg); filter: drop-shadow(2px 2px 0 #343b37); }
+.brand > span { font-family:var(--site-font); font-size: 23px; letter-spacing: -1px; }
+.brand small { letter-spacing: 1.3px; color: #697064; }
+.site-header nav button { color: #515a50; }
+.site-header nav button[aria-current=page] { color: var(--doodle-ink); }
+.site-header nav button[aria-current=page]::after {
+  height: 7px;
+  bottom: 5px;
+  background: var(--doodle-yellow);
+  border-radius: 50% 20% 40% 30%;
+  transform: rotate(-2deg);
+}
+.site-header .sound {
+  background: #f6e7c5;
+  border: 1.5px solid var(--doodle-ink);
+  border-radius: var(--doodle-edge);
+  box-shadow: 2px 2px 0 var(--doodle-ink);
+  color: var(--doodle-ink);
+}
+
+.teachers-hero { position: relative; padding-top: 85px; padding-bottom: 68px; gap: 58px; }
+.hero-editorial { position: relative; min-width: 0; }
+.school-kicker { font-size: 9px; color: #525c4b; letter-spacing: 1.6px; }
+.school-kicker > span { width: 10px; height: 10px; border: 1.5px solid var(--doodle-ink); background: var(--doodle-yellow); border-radius: 40% 55% 44% 38%; }
+.hero-editorial > .edition-label {
+  display: inline-block;
+  padding: 5px 12px;
+  color: var(--doodle-ink);
+  background: #f8dfa0;
+  border: 1px solid var(--doodle-ink);
+  border-radius: 2px 4px 3px 1px;
+  transform: rotate(-2deg);
+  letter-spacing: 1.3px;
+}
+.hero-editorial h1 {
+  color: var(--doodle-ink);
+  font-family:var(--site-font);
+  font-size: clamp(40px, 3.8vw, 59px);
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: -2.5px;
+  margin-bottom: 25px;
+}
+.hero-editorial h1 em { position: relative; display: inline-block; font-weight: inherit; color: var(--doodle-coral); font-style: normal; white-space: nowrap; }
+.hero-editorial h1 em svg { position: absolute; left: -3%; bottom: -10px; width: 106%; height: 19px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; }
+.teachers-lead { color: #414a3e; font-size: 15px; }
+.teachers-description { color: #62685d; line-height: 2; }
+.teachers-actions { margin-top: 27px; }
+.classroom-button, .pixel-button.primary, .maker .pixel-button {
+  color: var(--doodle-ink);
+  background: var(--doodle-yellow);
+  border: 2px solid var(--doodle-ink);
+  border-radius: var(--doodle-edge);
+  box-shadow: 4px 4px 0 var(--doodle-ink);
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.classroom-button .note-icon { color: #fff9e6; }
+.classroom-button:hover, .pixel-button.primary:hover, .maker .pixel-button:hover {
+  background: #ffe49b;
+  color: var(--doodle-ink);
+  box-shadow: 5px 6px 0 var(--doodle-ink);
+  transform: translate(-1px, -2px) rotate(-1deg);
+}
+.classroom-button:active, .pixel-button.primary:active, .maker .pixel-button:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--doodle-ink); }
+.board-link { color: var(--doodle-ink); border-bottom: 2px dashed #76806c; }
+.board-link:hover { color: var(--doodle-coral); border-color: var(--doodle-coral); }
+.hero-postscript { font: 13px/1.9 var(--doodle-hand); color: #6e725f; margin-top: 24px; }
+.hero-postscript > span { color: var(--doodle-coral); }
+.doodle-art { color: var(--doodle-ink); pointer-events: none; width: 90px; height: 90px; }
+.hero-sun { position: absolute; top: 8px; left: 43%; width: 69px; height: 69px; transform: rotate(9deg); }
+.hero-plane { position: absolute; right: -23px; bottom: -48px; width: 84px; height: 84px; transform: rotate(5deg); }
+.hero-flower { position: absolute; z-index: 2; right: -39px; top: -35px; width: 90px; height: 110px; transform: rotate(15deg); }
+.hero-board-wrap { padding-top: 29px; }
+.doodle-board-label {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 22px;
+  padding: 9px 20px;
+  font: 15px/1.5 var(--doodle-hand);
+  color: var(--doodle-ink);
+  background: #f6d879;
+  border: 1.5px solid var(--doodle-ink);
+  border-radius: 2px 4px 1px 5px;
+  box-shadow: 2px 2px 0 #343b3730;
+  transform: rotate(-5deg);
+}
+.hero-chalkboard {
+  min-height: 525px;
+  border: 9px solid #bd976c;
+  border-radius: 9px 4px 13px 5px / 5px 13px 4px 11px;
+  outline: 2px solid var(--doodle-ink);
+  background-color: #365b4b;
+  box-shadow: inset 0 0 0 2px #343b37, 9px 11px 0 #343b3724;
+  transform: rotate(2deg);
+}
+.chalkboard-date { border-bottom: 1px dashed #eee9cd80; font-family:var(--site-font); }
+.chalkboard-title { font-family:var(--site-font); font-style: normal; font-size: 28px; }
+.chalkboard-title > span { font-size: 22px; }
+.sample-note { border: 1.5px solid #493e39; border-radius: 2px 4px 9px 2px / 7px 2px 3px 4px; box-shadow: 4px 5px 0 #172e2a66; }
+.sample-note p { font-family:var(--site-font); font-style: normal; line-height: 1.65; }
+.sample-tape { background: #f4e1b5d9; border-left: 1px dashed #b5a386; border-right: 1px dashed #b5a386; }
+.chalk-doodle { border: 2px solid #f6ecd1; border-radius: 45% 55% 47% 50%; padding: 4px 9px; font-family:var(--site-font); }
+.chalk-doodle span { margin-left: 3px; }
+.chalk-tray { border-color: var(--doodle-ink); border-radius: 3px 2px 5px 4px; }
+.board-caption { color: #626653; font-family:var(--site-font); font-size: 14px; font-style: normal; transform: rotate(-2deg); }
+
+.gratitude-ribbon {
+  border-top: 2px dashed #343b3770;
+  border-bottom: 2px dashed #343b3770;
+  color: #444b3c;
+  background: #ecefdc;
+  padding: 17px 20px;
+  transform: rotate(-.6deg) scale(1.01);
+}
+.gratitude-ribbon i { color: var(--doodle-coral); }
+.teachers-how { padding-top: 76px; padding-bottom: 76px; }
+.teachers-section-heading { position: relative; }
+.how-sparkles { position: absolute; left: 1%; top: 0; width: 75px; height: 75px; transform: rotate(-13deg); }
+.teachers-section-heading h2, .teachers-event-story h2, .teachers-board-invite h2 {
+  color: var(--doodle-ink);
+  font-family:var(--site-font);
+  font-weight: 700;
+  font-size: 29px;
+  line-height: 1.65;
+  letter-spacing: -1px;
+}
+.edition-label { color: #86603f; }
+.teachers-steps { gap: 25px; padding: 9px 3px; }
+.teachers-steps li {
+  position: relative;
+  padding: 24px 24px 27px;
+  border: 1.5px solid var(--doodle-ink);
+  border-radius: var(--doodle-edge);
+  background: #fcf0c6;
+  box-shadow: 4px 5px 0 #343b37;
+  transform: rotate(-1.5deg);
+}
+.teachers-steps li:nth-child(2) { background: #f7e0da; transform: rotate(1deg); }
+.teachers-steps li:nth-child(3) { background: #e7edda; transform: rotate(-1deg); }
+.teachers-steps li::before { content: ''; position: absolute; width: 66px; height: 20px; top: -11px; left: calc(50% - 33px); background: #e5d6b7be; border-inline: 1px dashed #a2906c80; transform: rotate(-6deg); }
+.step-number { color: var(--doodle-ink); font: 27px/1.4 var(--doodle-hand); }
+.step-number span { color: #9b583c; }
+.teachers-steps h3 { margin-top: 13px; font-size: 14px; color: var(--doodle-ink); }
+.teachers-steps p { font-size: 11px; line-height: 2; color: #5c6355; }
+.event-calendar { border: 2px solid var(--doodle-ink); border-radius: var(--doodle-edge); background: #fffdf4; box-shadow: 6px 7px 0 #343b37; }
+.event-calendar::before, .event-calendar::after { background: var(--doodle-ink); }
+.event-calendar > div { background: #f5c5b7; border-bottom: 2px solid var(--doodle-ink); color: var(--doodle-ink); }
+.event-calendar > strong { font-family:var(--site-font); color: var(--doodle-coral); }
+.event-calendar > p { font-family:var(--site-font); color: #626653; font-style: normal; }
+.teachers-event-story > p:not(.edition-label) { color: #62685d; }
+.teachers-board-invite { position: relative; background: #e8edd9; border: 2px solid var(--doodle-ink); border-radius: var(--doodle-edge); box-shadow: 5px 5px 0 #343b37; }
+.teachers-board-invite::before { content: '♡'; position: absolute; top: -30px; right: 45px; font: 50px/1 var(--doodle-hand); color: var(--doodle-coral); transform: rotate(13deg); }
+.teachers-board-invite h2 { font-size: 26px; }
+footer { border-top: 2px dashed #343b3770; background: #f3eddf; color: #535d4b; }
+
+/* Carry the same stationery into the creator without changing note geometry. */
+.maker.page-wrap { --maker-ink: var(--doodle-ink); background: none; }
+.maker > .section-heading { border-bottom: 2px dashed #93987e; }
+.maker > .section-heading h1, .board-page-heading h1, .received .section-heading h1,
+.maker .maker-panel h2, .result-columns .panel h2, .bloom-stage h2 {
+  font-family:var(--site-font);
+  font-weight: 700;
+  color: var(--doodle-ink);
+  letter-spacing: -1px;
+}
+.maker .maker-panel, .result-columns .panel {
+  background: #fffdf5;
+  border: 2px solid var(--doodle-ink);
+  border-radius: var(--doodle-edge);
+  box-shadow: 5px 6px 0 #343b372b;
+}
+.maker .maker-panel .panel-label { border: 1px solid #626b51; background: #e9edda; border-radius: 3px 2px 5px 2px; color: #4a593d; transform: rotate(-1deg); }
+.maker .progress li { border-radius: var(--doodle-edge); }
+.maker .progress li.active { background: #f8e8b2; border: 1px solid var(--doodle-ink); color: var(--doodle-ink); box-shadow: 2px 2px 0 #343b37; }
+.maker .progress button > span:first-child { border-radius: 45% 50% 41% 49%; border-color: #838d72; }
+.maker .progress li.active button > span:first-child { background: var(--doodle-yellow); color: var(--doodle-ink); border-color: var(--doodle-ink); }
+.maker .progress li.active small { color: #76674b; }
+.note-color-options button, .note-paper-options button, .maker .decoration-options button {
+  border: 1px solid #8e967b;
+  border-radius: var(--doodle-edge);
+  background: #f9f6e9;
+}
+.note-color-options button.selected, .note-paper-options button.selected, .maker .decoration-options button.selected {
+  background: #faf0c9;
+  border-color: var(--doodle-ink);
+  box-shadow: 2px 3px 0 var(--doodle-ink);
+}
+.maker .editor input:not([type=checkbox]), .maker .editor textarea { border: 1.5px solid #7d886d; border-radius: 4px 9px 3px 8px / 8px 3px 7px 4px; background: #fffdf5; box-shadow: none; }
+.maker .editor input:focus, .maker .editor textarea:focus { outline: 2px dashed #b78247; outline-offset: 3px; }
+.maker .inspiration button { border-radius: var(--doodle-edge); background: #f6e4d8; color: #654e3e; border-color: #b39575; }
+.pixel-button.secondary, .maker .pixel-button.secondary { border: 1.5px solid var(--doodle-ink); border-radius: var(--doodle-edge); color: var(--doodle-ink); background: #f4edde; box-shadow: 3px 3px 0 var(--doodle-ink); }
+.community-chalkboard { border-radius: 8px 3px 13px 4px / 4px 12px 3px 9px; outline: 2px solid var(--doodle-ink); box-shadow: inset 0 0 0 2px #343b37, 7px 8px 0 #343b372b; }
+.board-chalk-heading, .empty-board h2 { font-family:var(--site-font); font-style: normal; }
+.empty-board .classroom-button { background: var(--doodle-yellow); border-color: var(--doodle-ink); color: var(--doodle-ink); }
+.toast { border: 2px solid var(--doodle-ink); border-radius: var(--doodle-edge); box-shadow: 4px 4px 0 var(--doodle-ink); background: #fbefc7; }
+
+/* Flat, inked stationery; all four silhouettes keep their text-safe areas. */
+.note-paper-shape { filter: drop-shadow(2px 3px 0 #343b3738); }
+.paper-swatch .note-paper-shape { filter: drop-shadow(1px 2px 0 #343b3740); }
+.sticky-note .note-tape {
+  background: transparent;
+  box-shadow: none;
+  clip-path: none;
+  opacity: 1;
+  overflow: visible;
+  aspect-ratio: 100 / 30;
+}
+.sticky-note h2 { font-weight: 600; }
+.sticky-note .note-topline { border-bottom: 1px dashed #343b3770; }
+.sticky-note .note-bottom { border-top: 1px dashed #343b3770; }
+.sticky-note .note-signature strong { text-decoration: underline; text-decoration-style: wavy; text-decoration-color: #343b3750; text-underline-offset: 4px; }
+.sample-note { border-width: 2px; box-shadow: 4px 5px 0 #172e2a77; }
+.sample-note::after { content: '✧'; position: absolute; top: 8px; right: 10px; color: #554b38; font: 22px/1 var(--site-font); transform: rotate(12deg); }
+.sample-tape { border: 1px solid #75664c; background: repeating-linear-gradient(120deg,#f5e6be 0 6px,#e5d5af 6px 7px); box-shadow: none; }
+
+@media (max-width: 1150px) {
+  .maker .progress::before { content: none; }
+}
+@media (max-width: 1100px) {
+  .teachers-hero { gap: 35px; }
+  .hero-editorial h1 { font-size: 43px; }
+  .hero-flower { right: -24px; width: 72px; }
+  .hero-plane { right: -12px; bottom: -60px; width: 70px; }
+  .sample-note p { font-size: 16px; }
+  .how-sparkles { left: -20px; width: 57px; }
+}
+@media (max-width: 850px) {
+  .brand > span { font-size: 22px; }
+  .teachers-hero { padding-top: 52px; gap: 45px; }
+  .hero-editorial h1 { font-size: clamp(40px, 6.5vw, 55px); }
+  .hero-sun { top: 18px; left: auto; right: 7%; width: 60px; height: 60px; }
+  .hero-plane { right: 10px; bottom: -17px; }
+  .hero-board-wrap { padding-top: 29px; }
+  .hero-flower { right: -20px; }
+  .how-sparkles { left: -20px; top: -41px; width: 48px; height: 48px; }
+  .teachers-steps { gap: 18px; }
+  .teachers-steps li { padding: 23px 17px; }
+}
+@media (max-width: 600px) {
+  .brand > span { font-size: 19px; letter-spacing: -.8px; max-width: 245px; line-height: 1.3; }
+  .brand small { font-size: 7px; letter-spacing: .6px; }
+  .brand { gap: 9px; }
+  .brand > .note-icon { width: 27px; height: 33px; }
+  .teachers-hero { padding-top: 38px; gap: 41px; }
+  .school-kicker { font-size: 7px; letter-spacing: 1.1px; margin-bottom: 25px; }
+  .hero-editorial > .edition-label { font-size: 7px; padding: 4px 8px; letter-spacing: 1px; }
+  .hero-editorial h1 { font-size: clamp(31px, 8vw, 45px); letter-spacing: -1.8px; margin-top: 5px; }
+  .hero-editorial h1 em svg { height: 14px; bottom: -7px; }
+  .hero-sun { top: 13px; right: 5%; width: 44px; height: 44px; }
+  .teachers-lead { font-size: 12px; }
+  .teachers-description { font-size: 11px; }
+  .teachers-actions { gap: 17px; }
+  .classroom-button { font-size: 10px; padding: 12px 15px; }
+  .hero-postscript { font-size: 10px; max-width: 85%; }
+  .hero-plane { bottom: -33px; right: 0; width: 55px; height: 55px; }
+  .hero-flower { top: -16px; right: -18px; width: 65px; height: 85px; }
+  .doodle-board-label { left: 12px; top: 2px; font-size: 12px; padding: 7px 12px; }
+  .hero-chalkboard { min-height: 475px; border-width: 8px; }
+  .chalkboard-title { font-size: 24px; }
+  .chalkboard-title > span { font-size: 19px; }
+  .sample-note { top: 173px; }
+  .sample-pink { top: 194px; }
+  .sample-note p { font-size: 13px; }
+  .chalk-doodle { font-size: 19px; padding: 3px 7px; }
+  .board-caption { font-size: 11px; }
+  .gratitude-ribbon { font-size: 7px; gap: 22px; padding-block: 14px; }
+  .teachers-how { padding-top: 53px; padding-bottom: 55px; }
+  .teachers-section-heading h2, .teachers-event-story h2 { font-size: 25px; line-height: 1.6; }
+  .teachers-steps { gap: 30px; padding-inline: 5px; }
+  .teachers-steps li { padding: 22px 24px; }
+  .teachers-steps h3 { font-size: 15px; }
+  .how-sparkles { top: -35px; left: -14px; width: 42px; height: 42px; }
+  .teachers-board-invite { padding: 26px 22px; }
+  .teachers-board-invite h2 { font-size: 23px; }
+  .teachers-board-invite::before { font-size: 40px; top: -25px; right: 20px; }
+  .maker > .section-heading h1, .received .section-heading h1 { font-size: 27px; line-height: 1.7; }
+  .maker .maker-panel h2 { font-size: 23px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .classroom-button, .pixel-button.primary, .maker .pixel-button { transition: none; }
+  .classroom-button:hover, .pixel-button.primary:hover, .maker .pixel-button:hover { transform: none; }
+}

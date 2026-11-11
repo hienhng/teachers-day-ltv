@@ -158,82 +158,146 @@
  .preview-live{font-size:8px;padding:4px 7px}
 }
 @media(prefers-reduced-motion:reduce){.maker .flower-options button{transition:none}}
+/* Direct letter composer */
+.maker.inline-maker{display:block;max-width:1020px}
+.inline-maker .result-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.inline-maker .result-columns.result-rejected{grid-template-columns:minmax(0,1fr);max-width:680px;margin-inline:auto}
+.composer-fields{display:grid;grid-template-columns:minmax(0,1fr);gap:28px 32px;min-width:0;margin:0;padding:0;border:0}
+.letter-workspace{min-width:0;padding:12px 0;align-self:start;position:relative}
+.letter-editor-heading{text-align:center;margin-bottom:28px}
+.letter-editor-heading h2{font-size:19px;margin:0 0 8px}
+.letter-editor-heading p{font-size:11px;color:#8b7b80}
+.maker .letter-workspace .sticky-note{width:100%;max-width:680px;margin:0 auto;isolation:isolate}
+.note-editable .note-writing{font-size:17px}
+.maker .note-editable textarea{display:block;box-sizing:border-box;width:100%;min-height:0;max-height:none;resize:none;overflow:hidden;border:0;border-bottom:1px dashed #63574850;border-radius:0;box-shadow:none;background:transparent;color:var(--note-ink);font:inherit;line-height:1.8;padding:5px 3px;margin:8px 0;transition:background .15s}
+.maker .note-editable textarea::placeholder{color:var(--note-ink);opacity:.55}
+.maker .note-editable textarea:hover{background:#ffffff25}
+.maker .note-editable textarea:focus{outline:2px solid #6e785b;outline-offset:4px;background:#ffffff40}
+.maker .note-editable .letter-recipient{font-size:1.4em;font-weight:600;line-height:1.45}
+.letter-signature{margin:22px 0 8px;font-size:.8em;line-height:1.8}
+.letter-signature>span,.letter-signature>strong{display:block}
+.maker .note-editable .letter-signature>strong,.maker .note-editable .letter-signature textarea{font:inherit;font-weight:600;line-height:1.8}
+.letter-workspace .count{margin:22px 12px 16px;font-size:10px;color:#897b74}
+.letter-workspace .inspiration{margin:0 12px;padding:12px 0;border:0;border-top:1px solid #ded4c9;display:flex;flex-wrap:wrap;gap:8px}
+.letter-workspace .inspiration legend{font-size:11px;padding-right:12px}
+.maker .letter-tools{padding:22px;box-shadow:0 4px 0 #eee5d7}
+.letter-tools>section+section{margin-top:24px;padding-top:20px;border-top:1px solid #e5dcd0}
+.maker .letter-tools h2{font-size:17px;margin:0 0 6px}
+.letter-tools .muted{font-size:10px;line-height:1.8}
+.letter-tools .note-writing-tip{display:none}
+.letter-tools .note-color-options{gap:7px;margin:15px 0 0}
+.letter-tools .note-color-options button,.letter-tools .note-color-options button.selected{min-height:75px;padding:8px 4px;font-size:9px;gap:4px}
+.letter-tools .color-note .note-icon{width:28px;height:32px}
+.letter-tools .note-paper-options{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:15px 0 0}
+.letter-tools .note-paper-options button,.letter-tools .note-paper-options button.selected{flex-direction:column;gap:6px;padding:8px 3px;font-size:9px}
+.letter-tools .paper-swatch{width:43px;height:43px;flex-shrink:0}
+.maker .letter-tools .maker-decorations{margin-top:14px}
+.maker .letter-tools .decoration-options{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.maker .letter-tools .decoration-options button,.maker .letter-tools .decoration-options button.selected{min-height:76px;padding:8px 3px;gap:5px;font-size:8px}
+.maker .letter-tools .decoration-options .note-sticker{width:30px;height:30px}
+.letter-send{grid-column:1/-1;border-top:1px solid #ded4c9;padding-top:24px}
+.letter-send .checkbox{display:flex;align-items:center;gap:9px;font-size:11px;margin:0 0 13px;line-height:1.8}
+.letter-send .checkbox input{width:17px;height:17px;accent-color:#788960}
+.letter-send .privacy-note{max-width:700px;margin:18px 0;line-height:1.9}
+@media(max-width:800px){.composer-fields{grid-template-columns:minmax(0,1fr);gap:26px}.letter-workspace{position:static;max-width:680px;width:100%;margin:auto}.letter-tools{grid-row:2}.inline-maker .result-columns{grid-template-columns:minmax(0,1fr)}.letter-tools .note-color-options{grid-template-columns:repeat(6,minmax(0,1fr))}.letter-tools .note-paper-options{grid-template-columns:repeat(4,minmax(0,1fr))}.maker .letter-tools .decoration-options{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:450px){.note-editable .note-writing{font-size:16px}.letter-tools .note-color-options{grid-template-columns:repeat(3,minmax(0,1fr))}.letter-tools .note-paper-options,.maker .letter-tools .decoration-options{grid-template-columns:repeat(3,minmax(0,1fr))}.letter-send>.primary{width:100%}}
 
-/* Pixel desktop: hard edges, inset controls, and a shared four-color palette.
-   Vietnamese text uses a full-coverage monospace face; pixel numerals and
-   ASCII captions use the bundled bitmap-style font. */
-.maker.page-wrap{--maker-ink:#78616f;--maker-rose:#e7b0c3;--maker-sage:#c2cea9;--maker-paper:#fff9ed;--maker-shadow:#d8c8b9;--maker-mono:'Courier New',monospace;--maker-pixel:'Press Start 2P',monospace;background-image:linear-gradient(90deg,#d8cbb52b 1px,transparent 1px),linear-gradient(#d8cbb52b 1px,transparent 1px);background-size:16px 16px}
-.maker>.section-heading{border-bottom:2px dashed #c8b4be;background:var(--maker-paper);padding-bottom:25px}
-.maker>.section-heading .eyebrow{font-family:var(--maker-mono);font-weight:700;font-size:11px;letter-spacing:2px;color:#8b776e}
-.maker>.section-heading h1{font-family:var(--maker-mono);font-weight:700;font-size:35px;line-height:1.4;letter-spacing:-1.5px;color:#65505f;text-shadow:2px 2px 0 #e8c6cb}
-.maker>.section-heading p{color:#897783}
-.maker .progress:before{content:'CARD MAKER';font-family:var(--maker-pixel);font-size:8px;line-height:1.8;letter-spacing:0;color:var(--maker-ink);background:var(--maker-paper)}
-.maker .progress{gap:12px}
-.maker .progress li{border:2px solid #cbbbac;background:#f5eedf;color:#8f7a86;box-shadow:3px 3px 0 #e1d3be}
-.maker .progress button{padding:11px 8px}
-.maker .progress button>span:first-child{font-family:var(--maker-pixel);font-size:9px;border:2px solid #b8a18e;background:#fff8e8;box-shadow:inset 2px 2px 0 #e8dbc7;color:#8f7764}
-.maker .progress button>span:last-child{font-family:var(--maker-mono);font-weight:700;font-size:12px}
-.maker .progress small{font-family:'Be Vietnam Pro',sans-serif;font-size:8px;color:#97808b}
-.maker .progress li.active{background:#f3d7df;border-color:var(--maker-ink);box-shadow:4px 4px 0 #c5a3b1;color:#725264}
-.maker .progress li.active button>span:first-child{background:var(--maker-rose);border-color:var(--maker-ink);box-shadow:inset 2px 2px 0 #f9dbe3;color:#674b5e}
-.maker .progress li.active small{color:#916c80}
-.maker .progress li.done{background:#edf0dd;border-color:#a6b18f}
-.maker .progress li.done button>span:first-child{background:var(--maker-sage);border-color:#8b9a77;box-shadow:inset 2px 2px 0 #e2e9cc;color:#637354}
-.maker .maker-panel{position:relative;padding-top:68px;border:2px solid var(--maker-ink);background:#fffaf0;box-shadow:inset 2px 2px 0 #fffdf5,inset -2px -2px 0 #e4d7c3,6px 6px 0 var(--maker-shadow)}
-.maker .maker-panel .panel-label{position:absolute;inset:0 0 auto;display:flex;gap:11px;min-height:36px;width:100%;padding:7px 12px;margin:0;background:var(--maker-rose);border:0;border-bottom:2px solid var(--maker-ink);box-shadow:inset 0 2px 0 #fae1e7;font-family:var(--maker-mono);font-size:11px;font-weight:700;letter-spacing:1px;color:#694e61}
-.maker-step-code{font-family:var(--maker-pixel);font-size:9px;line-height:1.8;letter-spacing:0;border-right:2px solid #b8879c;padding-right:11px}
-.maker-window-controls{display:flex;gap:4px;align-items:center;margin-left:auto}
-.maker-window-controls i{width:8px;height:8px;border:1px solid #9e788c;background:#f8dce4;box-shadow:inset 1px 1px 0 #fff0ef}
-.maker .maker-panel h2{font-family:var(--maker-mono);font-weight:700;font-size:25px;letter-spacing:-.8px;line-height:1.4;color:#65505f}
-.maker .maker-panel>.muted{color:#8f7885}
-.maker .flower-options{gap:10px;padding:3px 8px 7px 3px}
-.maker .flower-options button,.maker .flower-options button.selected,.maker .decoration-options button,.maker .decoration-options button.selected{border:2px solid #c1ad9c;background:#f5eddb;box-shadow:inset 2px 2px 0 #fffdf1,inset -2px -2px 0 #e7d8bf,3px 3px 0 #e2d1bc;transition:none;color:#715967}
-.maker .flower-options button:hover,.maker .decoration-options button:hover:not(:disabled){border-color:var(--maker-ink);background:#f9e6e9}
-.maker .flower-options button.selected,.maker .decoration-options button.selected{background:#f5d8e2;border-color:#a47991;box-shadow:inset 2px 2px 0 #ffeef1,inset -2px -2px 0 #dfb4c6,3px 3px 0 #bf9cab}
-.maker .flower-options button span,.maker .decoration-options button span{font-family:var(--maker-mono);font-size:11px;font-weight:700}
-.maker .flower-options b,.maker .decoration-options b{display:grid;place-items:center;right:5px;top:5px;width:15px;height:15px;background:#b9819b;border:1px solid #8c627d;color:#fff3ea;font-family:var(--maker-mono);font-size:11px;line-height:1}
-.maker .flower-options button:active,.maker .decoration-options button:active:not(:disabled){transform:translate(2px,2px);box-shadow:inset 2px 2px 0 #dcb9c5}
-.maker .flower-options button:hover .flower{transform:translateY(-3px)}
-.maker .flower-story{border:2px solid #a5b08b;background:#edf0da;box-shadow:inset 2px 2px 0 #f8fae7,3px 3px 0 #d9dec1}
-.maker .flower-story .eyebrow{font-family:var(--maker-mono);font-weight:700;font-size:10px;letter-spacing:.5px;color:#6b7e58}
-.maker .flower-sentiment{border-top:2px dotted #b9c2a0}
-.maker .flower-sentiment>span{font-family:var(--maker-mono);font-weight:700;font-size:10px;color:#81775e}
-.maker .fact-source{color:#71815d}
-.maker .form-actions{border-top:2px dashed #d8c4b5}
-.maker .pixel-button{border:2px solid #8e667d;background:#e7b0c3;color:#65485c;box-shadow:inset 2px 2px 0 #fce2e7,inset -2px -2px 0 #ce93ac,4px 4px 0 #927086;font-family:var(--maker-mono);font-size:12px;font-weight:700;transition:none;gap:8px}
-.maker .pixel-button:before,.maker .pixel-button:after{content:none}
-.maker .pixel-button:hover{transform:translate(-1px,-1px);background:#efc2d0;box-shadow:inset 2px 2px 0 #fff0ef,inset -2px -2px 0 #ce93ac,5px 5px 0 #927086}
-.maker .pixel-button:active{transform:translate(3px,3px);box-shadow:inset 2px 2px 0 #ce93ac}
-.maker .pixel-button.secondary{background:#f3e8cd;border-color:#aa9175;color:#76644f;box-shadow:inset 2px 2px 0 #fff7df,inset -2px -2px 0 #d6c39d,4px 4px 0 #a28e76}
-.maker .form-actions .text-link{font-family:var(--maker-mono);font-size:11px;font-weight:700;color:#987488}
-.maker .step-actions>.primary{font-size:12px}
-.maker .maker-theme-options{gap:14px}
-.maker .maker-theme-options .theme-option{border:2px solid #b9aa97;background:#f7efdc;box-shadow:inset 2px 2px 0 #fffdf0,3px 3px 0 #dfceb6}
-.maker .maker-theme-options .theme-option:hover{border-color:var(--maker-ink);background:#f1eed9}
-.maker .maker-theme-options .theme-option.selected{border-color:#87996e;background:#e8edd3;box-shadow:inset 2px 2px 0 #f8fbe6,inset -2px -2px 0 #c8d3ad,3px 3px 0 #a8b28e}
-.maker .maker-theme-options .theme-landscape{border:2px solid #b4a88f}
-.maker .maker-theme-options .theme-option-name{font-family:var(--maker-mono);font-weight:700;font-size:14px!important;color:#6d5a65}
-.maker .maker-theme-options .theme-description{color:#8c7882}
-.maker .maker-theme-options .theme-check{width:16px;height:16px;border:1px solid #788965;background:#a3b78a;color:#fff7de;font-family:var(--maker-mono);font-size:11px}
-.maker .decoration-tip{border:2px solid #c1aec8;background:#efe7ef;color:#886b8c;box-shadow:3px 3px 0 #e1d5e1}
-.maker .editor label:not(.checkbox){font-family:var(--maker-mono);font-size:13px;font-weight:700}
-.maker .editor input:not([type=checkbox]),.maker .editor textarea{border:2px solid #bba796;background:#fffcf1;box-shadow:inset 2px 2px 0 #eadfca;font-family:'Be Vietnam Pro',sans-serif}
-.maker .editor input:focus,.maker .editor textarea:focus{outline:2px solid #bb8fa6;outline-offset:2px}
-.maker .inspiration legend{font-family:var(--maker-mono);font-weight:700}
-.maker .inspiration button{border:2px solid #baa4bf;background:#e9dfed;box-shadow:inset 1px 1px 0 #faf0fc,2px 2px 0 #ccbbd1;font-family:var(--maker-mono);font-size:11px}
-.maker .inspiration button:active{transform:translate(2px,2px);box-shadow:none}
-.maker .checkbox input{appearance:none;width:16px;height:16px;min-width:16px;border:2px solid #a88b9c;background:#fff9ed;box-shadow:inset 2px 2px 0 #eadbcd;display:grid;place-items:center}
-.maker .checkbox input:checked{background:#ddb0c4}
-.maker .checkbox input:checked:after{content:'✓';font:700 13px/1 var(--maker-mono);color:#6a4b61}
-.maker .maker-preview-heading{border:2px solid var(--maker-ink);background:#d9dfc4;box-shadow:inset 2px 2px 0 #eff2df,4px 4px 0 #b9c29f;padding:12px;margin-bottom:13px;gap:8px}
-.maker .maker-preview-heading>div{min-width:0}
-.maker .maker-preview-heading .eyebrow{font-family:var(--maker-mono);font-size:9px;font-weight:700;letter-spacing:1px;color:#788360}
-.maker .maker-preview-heading h2{font-family:var(--maker-mono);font-size:20px;font-weight:700;letter-spacing:-.7px;color:#617354}
-.maker .preview-live{border:1px solid #8c9d74;background:#f0f2df;box-shadow:inset 1px 1px 0 #ffffef;font-family:var(--maker-mono);font-weight:700;font-size:9px;color:#6e805b}
-.maker .preview-selection{gap:6px;padding:0 3px}
-.maker .preview-selection>span{border:1px solid #bca897;background:#f3e7ce;box-shadow:inset 1px 1px 0 #fff5de,2px 2px 0 #dfcbb7;font-family:var(--maker-mono);font-weight:700;font-size:10px;color:#8a6e7e}
-.maker .preview-column .greeting{border:2px solid var(--maker-ink);box-shadow:5px 5px 0 #c7b3a2}
-.maker .maker-panel button:focus-visible,.maker .progress button:focus-visible,.maker a:focus-visible{outline:2px dashed #805e7a;outline-offset:4px}
-@media(max-width:1150px){.maker .progress:before{content:none}.maker .progress{gap:9px}.maker .progress button{padding:9px 5px}.maker .progress button>span:last-child{font-size:11px}.maker .progress button>span:first-child{font-size:8px}}
-@media(max-width:880px){.maker>.section-heading h1{font-size:31px}.maker .maker-panel h2{font-size:23px}.maker .maker-preview-heading{padding:9px}.maker .maker-preview-heading h2{font-size:17px}.maker .preview-live{font-size:8px;padding:3px}.maker .maker-theme-options .theme-option-name{font-size:12px!important}}
-@media(max-width:700px){.maker>.section-heading h1{font-size:29px;max-width:100%;letter-spacing:-1px}.maker>.section-heading .eyebrow{font-size:9px;letter-spacing:1px}.maker .progress{gap:5px}.maker .progress li{box-shadow:2px 2px 0 #e1d3be}.maker .progress li.active{box-shadow:2px 2px 0 #c5a3b1}.maker .progress button{padding:8px 1px;gap:7px}.maker .progress button>span:last-child{font-size:9px}.maker .progress button>span:first-child{font-size:7px}.maker .maker-panel{padding-top:61px;box-shadow:inset 2px 2px 0 #fffdf5,4px 4px 0 var(--maker-shadow)}.maker .maker-panel .panel-label{font-size:10px;letter-spacing:.5px;gap:9px}.maker-step-code{font-size:8px;padding-right:9px}.maker .maker-panel h2{font-size:24px}.maker .maker-theme-options .theme-option-name{font-size:13px!important}.maker .step-actions .primary{font-size:11px}.maker .maker-preview-heading h2{font-size:20px}.maker .preview-live{font-size:9px;padding:4px 6px}.maker .flower-options button span,.maker .decoration-options button span{font-size:10px}.maker .preview-selection>span{font-size:10px}}
+/* Larger, proportionate paper with all writing visible at once. */
+.maker .letter-workspace .note-editable{aspect-ratio:1;height:auto;min-width:0}
+.note-editable .note-content{align-items:center}
+.note-editable .note-writing{height:auto;min-height:0;overflow:visible;padding:5px;box-sizing:border-box;font-size:19px}
+.maker .note-editable .letter-recipient{font-size:1.2em}
+.note-editable .letter-signature{margin:.8em 0 .4em}
+.maker .note-editable textarea{margin:.4em 0;padding:.25em .15em}
+.maker .note-editable .letter-signature>strong{box-sizing:border-box;width:100%;margin:.4em 0;padding:.25em .15em;border-bottom:1px solid transparent;white-space:pre-wrap;overflow-wrap:break-word}
+@media(min-width:801px) and (max-width:1100px){.composer-fields{grid-template-columns:minmax(0,1fr)}.letter-tools{grid-row:2}.letter-workspace{width:100%}}
+/* Paper colors stay directly below the note. */
+.maker .letter-workspace .color-circle-options{display:flex;justify-content:center;flex-wrap:wrap;gap:14px;margin:22px 0 16px;padding:4px}
+.maker .color-circle-options button,.maker .color-circle-options button.selected{display:grid;place-items:center;flex:none;width:36px;height:36px;min-width:36px;min-height:36px;padding:0;border:2px solid #514d4055;border-radius:50%;background:var(--swatch);color:#493e25;font-size:17px;box-shadow:none;transition:transform .15s,outline-color .15s}
+.maker .color-circle-options button.selected{outline:2px solid #5c7051;outline-offset:4px;border-color:#514d4080}
+.maker .color-circle-options button:hover{transform:translateY(-2px)}
+.maker .color-circle-options button:focus-visible{outline:3px solid #5c7051;outline-offset:4px}
+.mobile-note-tools,.note-sheet-header,.note-sheet-backdrop{display:none}
+@media(max-width:800px){
+ .mobile-note-tools{display:flex;justify-content:center;gap:12px;margin:22px 0 0}
+ .mobile-note-tools button{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:44px;padding:10px 17px;border:1px solid #b7bca4;border-radius:10px;background:#fffdf3;color:#516047;font-size:12px}
+ .mobile-note-tools button>span{font-size:18px}
+ .maker .letter-tools{display:none}
+ .maker .letter-tools.sheet-open{display:block;position:fixed;z-index:101;bottom:0;left:0;right:0;width:auto;max-height:72dvh;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;margin:0;padding:12px 22px max(24px,env(safe-area-inset-bottom));border:1px solid #c3bda9;border-bottom:0;border-radius:24px 24px 0 0;background:#fffdf3;box-shadow:0 -6px 30px #343b3720;animation:note-sheet-rise .22s ease-out}
+ .note-sheet-backdrop{display:block;position:fixed;inset:0;z-index:100;border:0;padding:0;background:#343b3755;cursor:default}
+ .note-sheet-header{display:block;position:sticky;top:-12px;z-index:1;background:#fffdf3;padding:4px 0 14px}
+ .sheet-handle{display:block;width:38px;height:4px;background:#c6c3b2;border-radius:5px;margin:0 auto 14px}
+ .note-sheet-header>div:first-of-type{display:flex;align-items:center;justify-content:space-between;gap:15px}
+ .maker .note-sheet-header h2{font-size:18px;margin:0}
+ .sheet-close{display:grid;place-items:center;width:44px;height:44px;border:1px solid #d5d2c2;border-radius:50%;background:#f5f3e7;color:#515b46;font-size:25px}
+ .note-sheet-tabs{display:flex;gap:10px;margin-top:12px}
+ .note-sheet-tabs button{flex:1;min-height:44px;border:1px solid #d5d2c2;border-radius:9px;background:#f8f5e9;color:#647057;font-size:12px}
+ .note-sheet-tabs button[aria-selected=true]{background:#e8eedc;border-color:#7f906b;color:#425638;font-weight:600}
+ .letter-tools .tool-shape,.letter-tools .tool-stickers{display:none}
+ .letter-tools[data-active-tool=shape] .tool-shape,.letter-tools[data-active-tool=stickers] .tool-stickers{display:block;margin:0;padding:0;border:0}
+ .letter-tools>section>h2{display:none}
+ .letter-tools .note-paper-options{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .maker .letter-tools .decoration-options{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .maker .letter-tools button:focus-visible{outline:2px solid #5c7051;outline-offset:3px}
+ .letter-send{grid-row:auto}
+}
+@keyframes note-sheet-rise{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.maker .letter-tools.sheet-open{animation:none}.maker .color-circle-options button{transition:none}}
+/* Center the letter and keep its desktop controls underneath. */
+.letter-workspace{width:100%;max-width:680px;margin:0 auto}
+@media(min-width:801px){
+ .maker .letter-tools{grid-row:2;display:flex;align-items:start;gap:24px;width:100%;max-width:880px;box-sizing:border-box;margin:0 auto}
+ .letter-tools .tool-shape{flex:0 0 260px;min-width:0}
+ .letter-tools .tool-stickers{flex:1;min-width:0;margin:0;padding:0 0 0 24px;border-top:0;border-left:1px solid #e5dcd0}
+ .letter-tools .note-paper-options{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .letter-send{width:100%;max-width:880px;margin:0 auto}
+}
+
+/* Swipe the sticker strip without widening the page. */
+.maker .letter-tools .decoration-options{display:flex;gap:9px;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:4px 3px 12px;scrollbar-width:thin}
+.maker .letter-tools .decoration-options button{flex:0 0 76px;scroll-snap-align:start}
+.maker .letter-tools .decoration-options:focus-visible{outline:2px solid #5c7051;outline-offset:3px}
+
+.maker .letter-tools .note-paper-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible;gap:8px}
+.maker .letter-tools .note-paper-options button,.maker .letter-tools .note-paper-options button.selected{min-width:0;min-height:64px;padding:8px 3px}
+/* Keep the editor near the top and size desktop paper to the available height. */
+.maker.inline-maker{padding-top:16px}
+.maker.inline-maker>.section-heading{position:relative;margin-bottom:12px;padding:0 62px 12px 0}
+.inline-maker>.section-heading .maker-heading-doodle{position:absolute;right:4px;top:0;width:48px;height:48px}
+.maker.inline-maker>.section-heading .eyebrow{margin-bottom:4px}
+.maker.inline-maker>.section-heading h1{font-size:26px;line-height:1.35;margin:4px 0 5px}
+.maker.inline-maker>.section-heading p{font-size:11px;line-height:1.6}
+.inline-maker .letter-workspace{padding:0}
+.inline-maker .letter-editor-heading{margin-bottom:12px}
+.inline-maker .letter-editor-heading h2{font-size:16px;margin:0 0 4px}
+.inline-maker .letter-editor-heading p{margin:0;font-size:10px;line-height:1.6}
+.maker.inline-maker .color-circle-options{margin:14px 0 12px}
+.inline-maker .letter-workspace .count{margin:12px 12px 10px}
+.inline-maker .composer-fields{row-gap:18px}
+@media(min-width:801px){
+ .maker.inline-maker .letter-workspace .sticky-note{max-width:clamp(320px,calc(100svh - 350px),520px)}
+ .inline-maker .letter-workspace .inspiration{padding:8px 0}
+ .maker.inline-maker .letter-tools{padding:16px 20px}
+ .inline-maker .letter-send{padding-top:16px}
+}
+/* A compact desktop toolbar, sized only to its controls. */
+@media(min-width:801px){
+ .maker.inline-maker .letter-tools{align-self:start;align-items:start;height:max-content;min-height:0;padding:12px 16px;gap:18px}
+ .maker.inline-maker .letter-tools h2{font-size:13px;line-height:1.4;margin:0 0 8px;letter-spacing:0}
+ .letter-tools .tool-shape{flex-basis:220px}
+ .letter-tools .tool-stickers{padding-left:18px}
+ .letter-tools .tool-stickers>.muted{display:none}
+ .maker .letter-tools .note-paper-options{margin:0;gap:7px}
+ .maker .letter-tools .note-paper-options button,.maker .letter-tools .note-paper-options button.selected{min-height:48px;padding:6px 3px}
+ .maker .letter-tools .paper-swatch{width:32px;height:32px}
+ .maker .letter-tools .maker-decorations{margin:0;padding:0}
+ .maker .letter-tools .decoration-options{padding:2px 3px 7px;gap:7px}
+ .maker .letter-tools .decoration-options button,.maker .letter-tools .decoration-options button.selected{flex-basis:64px;min-height:56px;padding:6px 3px;gap:4px}
+ .maker .letter-tools .decoration-options .note-sticker{width:24px;height:24px}
+ .maker .letter-tools .decoration-summary{margin-top:3px;font-size:8px}
+ .maker .letter-tools .decoration-summary .text-link{font-size:8px}
+}
+@media(min-width:801px){
+ .maker .letter-tools .decoration-summary{line-height:1.4;min-height:14px}
+ .maker .letter-tools .decoration-summary .text-link{padding:0;min-height:0;line-height:1.4}
+}

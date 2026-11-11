@@ -1,5 +1,39 @@
 # Verification
 
+## Fullscreen chalkboard hero — 9 November 2026
+
+- Promoted the chalkboard to the homepage hero, with a matching navigation bar, centered headline and actions, taped example notes, chalk drawings, wooden frame and chalk ledge.
+- Browser checks confirmed the entire board fits the first screen at 1280 × 720 and 390 × 844, with no horizontal overflow. The 320px phone layout keeps content readable and scrolls vertically as needed.
+- Verified the primary action opens the note editor, the A+ doodle displays its message, and the scroll invitation links to the how-to section.
+- TypeScript, the production build and all 31 existing tests passed.
+- Saved a desktop screenshot in `.qa/chalkboard-hero-desktop.png`. Local implementation only.
+
+## Sticky-note shapes and paper detail — 9 November 2026
+
+- Replaced paper patterns with square, heart, star and leaf silhouettes. The square remains the default.
+- Kept every silhouette at a fixed aspect ratio; the writing fits its safe area by reducing text size after edits, resizing and font loading.
+- Added paper grain, directional shading, layered shadows, textured tape and a curled square corner. The paper outline cuts away the corner beneath the curl.
+- Tape and both sticker anchors are defined per shape, including rotation, and shared by the UI and PNG export. Decoration sizes scale with the note on compact cards and mobile.
+- TypeScript and all 23 tests passed. Production build passed; TypeScript and tests passed again after the final placement update.
+- Rendered and inspected all four paper silhouettes with tape and stickers, and a close view of the corrected curled corner. Live browser inspection was unavailable: the in-app preview timed out and Chrome access was not approved.
+- Added migration `007_note_shapes.sql`; the migration test confirms it is repeatable, preserves existing notes and allows all four shape keys. Existing databases need this migration before heart-shaped notes can be saved. No hosted database was changed.
+
+## Teachers' Day sticky-note redesign — 9 November 2026
+
+- Production build passed with Next.js 16.4.1, including TypeScript checks.
+- All 20 tests passed (15 backend tests and 5 creator/compatibility tests).
+- Desktop and 390px mobile browser checks verified the classroom homepage, note colors, paper styles, the three-sticker limit, Vietnamese message entry, and readable bundled Lora typography.
+- Browser checks used the actual API route handlers with an isolated in-memory PGlite database behind a local preview proxy. No hosted Neon data or credentials were changed.
+- Created a note, submitted it with the sender nickname hidden, verified it stayed off the public chalkboard while pending, approved it through the moderator UI, and verified it appeared as a sticky note.
+- Opened the note dialog and its sharing URL; the hidden sender nickname remained absent from both public views.
+- Generated and visually inspected the sticky-note PNG, including Vietnamese text and its embedded QR. The standalone QR download also rendered.
+- Fixed mobile compact-note overflow and checked that its signature remains within the paper. No horizontal page overflow was observed at 390px.
+- No browser console errors appeared in the final verification.
+- Existing persisted design keys remain compatible. No database migration is required.
+- Local-only implementation; no deployment was made.
+
+## Earlier verification history
+
 Completed locally on 15 October 2026.
 
 Sequential creator and garden placement update: the editor now shows one panel at a time (flower, background, decorations, content, then send). All 17 tests passed, covering panel boundaries, preserved content, all nine decorations, garden coordinate validation, moderation visibility, coordinate persistence, and repeatable migrations that preserve existing cards. TypeScript passed. The bow knot was centered on the shared stem and raised to just below the bloom. Bees have separate flight, wing, and pollen timelines with turns along the flight route. Garden flowers are larger and use stored free-placement coordinates rather than a grid. Existing Neon databases need migrations 002 and 003 after 001; no live Neon schema was changed by the assistant.

@@ -14,21 +14,24 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "next": "16.4.1",
-    "react": "19.3.1",
-    "react-dom": "19.3.1",
-    "@neondatabase/serverless": "^1.1.0",
-    "qrcode": "^1.5.4",
+    "@ai-sdk/google": "^4.0.117",
     "@fontsource/be-vietnam-pro": "^5.3.0",
-    "@fontsource/press-start-2p": "^5.3.0"
+    "@fontsource/lora": "5.3.0",
+    "@fontsource/press-start-2p": "^5.3.0",
+    "@neondatabase/serverless": "^1.1.0",
+    "ai": "^7.0.169",
+    "next": "16.4.1",
+    "qrcode": "^1.5.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
-    "typescript": "5.9.3",
+    "@electric-sql/pglite": "^0.3.14",
     "@types/node": "22.19.19",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "@types/qrcode": "^1.5.6",
-    "vitest": "^3.2.4",
-    "@electric-sql/pglite": "^0.3.14"
+    "typescript": "5.9.3",
+    "vitest": "^3.2.4"
   }
 }

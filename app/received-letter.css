@@ -1,0 +1,38 @@
+.received.page-wrap{position:relative;isolation:isolate;max-width:none;overflow:clip}
+.received-letter{width:min(100%,600px);margin:0 auto;text-align:center}
+.envelope-invitation{min-height:2em;margin:0 0 8px;color:#867456;font-size:11px}
+.envelope-stage{position:relative;isolation:isolate;width:min(100%,520px);margin:-28px auto 0;aspect-ratio:1.05;perspective:1200px}
+.envelope-back,.envelope-pocket,.envelope-flap,.envelope-trigger{position:absolute;left:11%;width:78%}
+.envelope-back,.envelope-pocket,.envelope-trigger{top:32%;height:43%}
+.envelope-back{z-index:0;filter:drop-shadow(0 14px 14px #6e563329)}
+.envelope-back svg,.envelope-pocket svg,.envelope-flap svg{width:100%;height:100%;overflow:visible}
+.envelope-note{position:relative;z-index:1;width:100%;visibility:hidden;opacity:0;transform:translateY(5%) scale(.52);transform-origin:center;outline-offset:-12px}
+.envelope-note .note-viewport{overflow:visible}
+.envelope-pocket{z-index:2}
+.envelope-flap{z-index:3;top:32%;height:25%;transform-origin:50% 0;backface-visibility:visible}
+.envelope-trigger{z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 18px 16px;color:#654f34;border-radius:8px}
+.envelope-trigger:focus-visible{outline:3px solid #426444;outline-offset:8px}
+.envelope-seal{position:absolute;top:37%;left:calc(50% - 23px);display:grid;place-items:center;width:46px;height:46px;border:3px double #a45f4d;border-radius:50%;background:#bb7461;color:#fff0d4;font:29px/1 Georgia,serif;box-shadow:0 3px 4px #6f402e33;transition:transform .2s}
+.envelope-trigger:hover .envelope-seal{transform:rotate(-9deg) scale(1.08)}
+.envelope-address{display:block;width:100%;font-size:9px;line-height:1.5}
+.envelope-address strong{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:500}
+.envelope-open-label{margin-top:9px;font-size:9px;color:#836a46}
+.received-letter[data-phase=opening] .envelope-trigger{visibility:hidden}
+.received-letter[data-phase=opening] .envelope-flap{animation:envelope-flap-open 2.2s ease-in-out both}
+.received-letter[data-phase=opening] :is(.envelope-back,.envelope-pocket){animation:envelope-away 2.2s ease-in-out both}
+.received-letter[data-phase=opening] .envelope-note{visibility:visible;animation:envelope-note-emerge 2.2s cubic-bezier(.25,.65,.3,1) both}
+.received-letter[data-phase=open] :is(.envelope-back,.envelope-pocket,.envelope-flap,.envelope-trigger){visibility:hidden}
+.received-letter[data-phase=open] .envelope-note{visibility:visible;opacity:1;transform:none;z-index:4}
+.received-letter-actions{margin-top:12px}
+.received-letter-actions>.text-link{display:block;margin:15px auto 0}
+.envelope-skip{font-size:10px}
+.letter-edge-flowers{position:absolute;top:0;bottom:0;left:50%;width:100vw;transform:translateX(-50%);z-index:-1;pointer-events:none;overflow:hidden}
+.letter-edge-flowers svg{position:absolute;bottom:-12px;width:clamp(110px,18vw,250px);height:auto;max-height:70dvh;filter:drop-shadow(0 3px 2px #62543b12);transform-origin:bottom center;animation:letter-flowers-bloom 1.2s .65s cubic-bezier(.2,.7,.3,1) both}
+.letter-flowers-left{left:-22px;--flower-lean:-12deg}
+.letter-flowers-right{right:-22px;--flower-lean:12deg}
+@keyframes letter-flowers-bloom{from{opacity:0;transform:translateY(65%) rotate(var(--flower-lean)) scale(.7)}to{opacity:1;transform:translateY(0) rotate(0) scale(1)}}
+@keyframes envelope-flap-open{0%,8%{transform:rotateX(0);z-index:3}30%{transform:rotateX(180deg);z-index:0;opacity:1}65%{transform:rotateX(180deg) translateY(0);opacity:1;z-index:0}100%{transform:rotateX(180deg) translateY(-100px);opacity:0;z-index:0}}
+@keyframes envelope-note-emerge{0%,23%{opacity:0;transform:translateY(5%) scale(.52)}26%{opacity:1;transform:translateY(5%) scale(.52)}62%,70%{opacity:1;transform:translateY(-24%) scale(.52)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes envelope-away{0%,62%{opacity:1;transform:translateY(0)}90%,100%{opacity:0;transform:translateY(100px)}}
+@media(max-width:600px){.envelope-invitation{font-size:9px}.envelope-trigger{padding:0 10px 9px}.envelope-seal{width:34px;height:34px;left:calc(50% - 17px);top:32%;font-size:22px}.envelope-address{font-size:7px}.envelope-address strong{font-size:10px}.envelope-open-label{font-size:8px;margin-top:5px}}
+@media(prefers-reduced-motion:reduce){.received-letter[data-phase=opening] :is(.envelope-back,.envelope-pocket,.envelope-flap,.envelope-trigger){visibility:hidden}.received-letter[data-phase=opening] .envelope-note{visibility:visible;opacity:1;transform:none}.envelope-seal{transition:none}}
