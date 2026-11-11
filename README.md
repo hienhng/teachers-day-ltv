@@ -31,6 +31,10 @@ For an older database, apply only outstanding migrations in order:
 7. `007_note_shapes.sql`
 8. `008_automatic_moderation.sql` (updates defaults for new notes; existing notes keep their status)
 9. `009_ai_moderation.sql` (required before deploying automated moderation; adds review metadata without changing existing decisions)
+10. `010_submission_deadline.sql` (required before deploying the admin submission cutoff; creates persistent settings, disabled by default)
+11. `011_subject_stickers.sql` (required before saving PE, IT, Biology, and Arts stickers)
+
+In `/admin`, use **Thời hạn nhận lời tri ân** to enable a cutoff, choose a date and time in Vietnam time (UTC+7), and save. New submissions at or after that instant are saved as rejected with a deadline reason and skip AI review. Existing notes keep their status, and admins can manually restore rejected notes. Disable the setting and save to resume normal moderation. The cutoff runs on the server at submission time and needs no scheduled job.
 
 Configure these server-only variables in `.env.local` (or the existing `.env`), and in your hosting environment:
 

@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useLayoutEffect,useRef,useState} from 'react';
+import {useRouter} from 'next/navigation';
 import {createLetterQR} from '../lib/letter-qr';
 import {NoteIcon,StickyNote} from './sticky-note';
 import {ScatteredNotes} from './scattered-notes';
@@ -53,9 +54,11 @@ function CardPreview({card,id,fitToViewport=false,fitToFrame=!fitToViewport,orig
  },[fitToViewport,fitToFrame,origin]);
  return <div ref={viewport} className={`note-viewport${fitToFrame?' note-viewport-fitted':''}`}><StickyNote card={card} id={id}/></div>;
 }
-export default function Petals(){
- const[view,setView]=useState('home'),[step,setStep]=useState(1),[card,setCard]=useState<Card>(blank),[saved,setSaved]=useState<Card|null>(null),[busy,setBusy]=useState(false),[bloom,setBloom]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[garden,setGarden]=useState<Card[]>([]),[gardenPage,setGardenPage]=useState(0),[gardenPageSize,setGardenPageSize]=useState(20),[gardenHasMore,setGardenHasMore]=useState(false),[loading,setLoading]=useState(false),[selected,setSelected]=useState<Card|null>(null),[qr,setQr]=useState(''),[png,setPng]=useState('');
+export default function Petals({initialView='home'}:{initialView?:'home'|'garden'}){
+ const router=useRouter();
+ const[view,setView]=useState<string>(initialView),[step,setStep]=useState(1),[card,setCard]=useState<Card>(blank),[saved,setSaved]=useState<Card|null>(null),[busy,setBusy]=useState(false),[bloom,setBloom]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[garden,setGarden]=useState<Card[]>([]),[gardenPage,setGardenPage]=useState(0),[gardenPageSize,setGardenPageSize]=useState(20),[gardenHasMore,setGardenHasMore]=useState(false),[loading,setLoading]=useState(false),[selected,setSelected]=useState<Card|null>(null),[qr,setQr]=useState(''),[png,setPng]=useState('');
  const[moderationStatus,setModerationStatus]=useState<ModerationStatus>('pending');
+ const[deadlineRejected,setDeadlineRejected]=useState(false);
  const dialog=useRef<HTMLDialogElement>(null),preview=useRef<HTMLDivElement>(null),resultHeading=useRef<HTMLHeadingElement>(null),audio=useRef<AudioContext|null>(null);
  const selectedOrigin=useRef<NoteOpenOrigin|null>(null);
  const selectedSource=useRef<HTMLButtonElement|null>(null),returning=useRef<Animation|null>(null);
@@ -85,11 +88,11 @@ export default function Petals(){
   setCard(blank);setSaved(null);setStep(1);setModerationStatus('pending');
   setQr('');setPng('');setBloom(false);
  }
- function navigate(v:string){if(view==='maker'&&v!=='maker')clearMakerDraft();if(v==='garden')setGardenPage(0);if(location.search)history.replaceState(null,'','/');ping();setView(v);setError('');setNotice('');window.scrollTo({top:0,behavior:'instant'});}
+ function navigate(v:string){if(view==='maker'&&v!=='maker')clearMakerDraft();ping();if(v==='garden'){router.push('/board');return}if(initialView==='garden'){router.push('/');return}if(location.search)history.replaceState(null,'','/');setView(v);setError('');setNotice('');window.scrollTo({top:0,behavior:'instant'});}
  function go(v:string){navigate(v)}
  function showEvent(){ping();if(view!=='home'){navigate('home');window.setTimeout(()=>document.getElementById('event')?.scrollIntoView({behavior:'smooth',block:'start'}),0);return}document.getElementById('event')?.scrollIntoView({behavior:'smooth',block:'start'});}
  function create(){clearMakerDraft();navigate('maker')}
- useEffect(()=>{const id=new URLSearchParams(location.search).get('card');if(id){setView('received');setLoading(true);fetch(`/api/cards?id=${encodeURIComponent(id)}`).then(async r=>{const d=await r.json() as {error:string;card:Card;cards:Card[];hasMore:boolean;editToken:string};if(!r.ok)throw Error(d.error);setSaved(d.card)}).catch(e=>setError(e.message)).finally(()=>setLoading(false))}},[]);
+ useEffect(()=>{if(initialView!=='home')return;const id=new URLSearchParams(location.search).get('card');if(id){setView('received');setLoading(true);fetch(`/api/cards?id=${encodeURIComponent(id)}`).then(async r=>{const d=await r.json() as {error:string;card:Card;cards:Card[];hasMore:boolean;editToken:string};if(!r.ok)throw Error(d.error);setSaved(d.card)}).catch(e=>setError(e.message)).finally(()=>setLoading(false))}},[initialView]);
  useEffect(()=>{if(!notice)return;const t=setTimeout(()=>setNotice(''),4500);return()=>clearTimeout(t)},[notice]);
  useEffect(()=>{if(selected)dialog.current?.showModal();else dialog.current?.close()},[selected]);
  useEffect(()=>{if(step>=5&&!bloom)resultHeading.current?.focus({preventScroll:true})},[step,bloom]);
@@ -97,7 +100,7 @@ export default function Petals(){
  useEffect(()=>{if(view!=='garden')return;const controller=new AbortController();setLoading(true);setError('');fetch(`/api/cards?limit=${gardenPageSize}&offset=${gardenPage*gardenPageSize}`,{signal:controller.signal}).then(async r=>{const d=await r.json() as {error:string;cards:Card[];hasMore:boolean};if(!r.ok)throw Error(d.error);setGarden(d.cards);setGardenHasMore(d.hasMore)}).catch(e=>{if(!controller.signal.aborted)setError((e as Error).message)}).finally(()=>{if(!controller.signal.aborted)setLoading(false)});return()=>controller.abort()},[view,gardenPage,gardenPageSize]);
  const update=(key:keyof Card,value:string|boolean|Decoration[])=>setCard(c=>({...c,[key]:value}));
  function changeStep(nextStep:number){setError('');setStep(nextStep);window.scrollTo({top:0,behavior:'instant'});}
- async function makeBloom(e:React.FormEvent){e.preventDefault();setBusy(true);setError('');try{const r=await fetch('/api/cards',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...card,shareSender:!card.anonymous})}),d=await r.json() as {error:string;card:Card;cards:Card[];hasMore:boolean;editToken:string;moderationStatus:ModerationStatus};if(!r.ok)throw Error(d.error||'Không thể lưu thiệp. Vui lòng thử lại.');setSaved(d.card);setModerationStatus(d.moderationStatus||'pending');changeStep(5);ping()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
+ async function makeBloom(e:React.FormEvent){e.preventDefault();setBusy(true);setError('');try{const r=await fetch('/api/cards',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...card,shareSender:!card.anonymous})}),d=await r.json() as {error:string;card:Card;cards:Card[];hasMore:boolean;editToken:string;moderationStatus:ModerationStatus;moderationReason?:string};if(!r.ok)throw Error(d.error||'Không thể lưu thiệp. Vui lòng thử lại.');setSaved(d.card);setModerationStatus(d.moderationStatus||'pending');setDeadlineRejected(d.moderationReason==='submission_deadline');changeStep(5);ping()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  const canShare=Boolean(saved)&&moderationStatus!=='rejected';
  function finishGarden(){if(!canShare)return;setBloom(true);changeStep(6);ping();setTimeout(()=>setBloom(false),matchMedia('(prefers-reduced-motion: reduce)').matches?0:900)}
  const shareUrl=()=>`${location.origin}/?card=${saved?.id}`;
@@ -120,9 +123,9 @@ export default function Petals(){
   :saved&&<div className={`result-columns${moderationStatus==='rejected'?' result-rejected':''}`}>{moderationStatus!=='rejected'&&<div ref={preview}><CardPreview card={saved}/></div>}
    {step===5||!canShare?<section className="panel garden-step" aria-labelledby="garden-step-title">
     <h2 id="garden-step-title" ref={resultHeading} tabIndex={-1}>Cảm ơn bạn đã gửi yêu thương!</h2>
-    <p className="success" role="status">{moderationStatus==='approved'?'Lời nhắn đã được duyệt và hiển thị trên bảng tri ân.':moderationStatus==='rejected'?'Lời nhắn chưa được chấp nhận lên bảng tri ân. Bạn có thể viết lại lời nhắn phù hợp.':'Lời nhắn đã được gửi và đang chờ LTPC xem xét.'}</p>
-    <p>{moderationStatus==='rejected'?'Cảm ơn bạn đã cùng giữ bảng tri ân thân thiện với mọi người.':'Chỉ lời nhắn đã được duyệt mới hiển thị công khai trên bảng tri ân.'}</p>
-    <div className="form-actions">{canShare?<button type="button" className="pixel-button primary" onClick={finishGarden}>Tiếp tục chia sẻ tấm thiệp →</button>:<button type="button" className="pixel-button primary" onClick={()=>{setCard(c=>({...c,message:''}));setSaved(null);setQr('');setPng('');setModerationStatus('pending');changeStep(1)}}>Viết lại lời nhắn →</button>}</div>
+    <p className="success" role="status">{deadlineRejected?'Thời hạn nhận lời tri ân đã kết thúc. Lời nhắn của bạn không được đăng lên bảng chung.':moderationStatus==='approved'?'Lời nhắn đã được duyệt và hiển thị trên bảng tri ân.':moderationStatus==='rejected'?'Lời nhắn chưa được chấp nhận lên bảng tri ân. Bạn có thể viết lại lời nhắn phù hợp.':'Lời nhắn đã được gửi và đang chờ LTPC xem xét.'}</p>
+    <p>{deadlineRejected?'Cảm ơn bạn đã quan tâm và gửi yêu thương đến thầy cô.':moderationStatus==='rejected'?'Cảm ơn bạn đã cùng giữ bảng tri ân thân thiện với mọi người.':'Chỉ lời nhắn đã được duyệt mới hiển thị công khai trên bảng tri ân.'}</p>
+    <div className="form-actions">{deadlineRejected?<button type="button" className="pixel-button primary" onClick={()=>go('home')}>Về trạm tri ân →</button>:canShare?<button type="button" className="pixel-button primary" onClick={finishGarden}>Tiếp tục chia sẻ tấm thiệp →</button>:<button type="button" className="pixel-button primary" onClick={()=>{setCard(c=>({...c,message:''}));setSaved(null);setQr('');setPng('');setModerationStatus('pending');changeStep(1)}}>Viết lại lời nhắn →</button>}</div>
    </section>:<section className="panel" aria-labelledby="send-step-title">
     <h2 id="send-step-title" ref={resultHeading} tabIndex={-1}>Mang lời cảm ơn đến thầy cô.</h2><p>Gửi đường dẫn, chia sẻ mã QR, hoặc lưu lại tấm thiệp của bạn.</p>
     <div className="share-actions"><button className="pixel-button primary" onClick={copy}>Sao chép đường dẫn ↗</button><button className="pixel-button secondary" onClick={getQR}>Tải mã QR</button><button className="pixel-button secondary" disabled={busy} onClick={exportPNG}>Tải thiệp PNG ↓</button></div><label className="share-url">Đường dẫn thiệp<input readOnly value={shareUrl()} onFocus={e=>e.target.select()}/></label>

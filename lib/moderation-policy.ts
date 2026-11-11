@@ -3,11 +3,12 @@ export const moderationCategories=['appropriate','spam','abuse','sexual','threat
 export type ModerationCategory=typeof moderationCategories[number];
 export type ModelVerdict={decision:'approve'|'reject'|'review';category:ModerationCategory;confidence:number};
 export type ModerationRecord={
- source?:'ai'|'manual'|'filter';state?:'running'|'done';reason?:string;model?:string;
+ source?:'ai'|'manual'|'filter'|'deadline';state?:'running'|'done';reason?:string;model?:string;
  confidence?:number;category?:ModerationCategory;decision?:ModelVerdict['decision'];
  attemptId?:string;startedAt?:string;reviewedAt?:string;policyVersion?:number;
 };
 export const moderationReasons:Record<string,string>={
+ submission_deadline:'Lời nhắn được gửi sau thời hạn nhận lời tri ân.',
  appropriate:'Lời tri ân phù hợp với bảng công khai.',
  spam:'Có nội dung quảng cáo hoặc spam.',
  abuse:'Có nội dung xúc phạm hoặc bắt nạt.',

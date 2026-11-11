@@ -10,7 +10,7 @@ body:has(.chalkboard-hero) { --chalk-header-height: 100px; }
   border-bottom: 1px dashed #f2edd13b;
 }
 .site-header:has(+ .teachers-home) .brand,
-.site-header:has(+ .teachers-home) nav button { color: #f5f0dc; }
+.site-header:has(+ .teachers-home) nav :is(button, .admin-nav-link) { color: #f5f0dc; }
 .site-header:has(+ .teachers-home) .brand small { color: #c2cdb9; }
 .site-header:has(+ .teachers-home) .brand > .note-icon { filter: drop-shadow(2px 2px 0 #102e27); }
 .site-header:has(+ .teachers-home) nav button[aria-current=page]::after { background: #e8cd8070; }

@@ -17,6 +17,7 @@ export function SiteNavigation({view,onNavigate,onCreate,onEvent}: NavigationPro
       <button aria-current={view==='maker'?'page':undefined} onClick={onCreate}>Viết lời tri ân</button>
       <button aria-current={view==='garden'?'page':undefined} onClick={()=>onNavigate('garden')}>Bảng tri ân</button>
       <button onClick={onEvent}>Về sự kiện</button>
+      <a className="admin-nav-link" href="/admin">Quản trị</a>
     </nav>
   </header>;
 }

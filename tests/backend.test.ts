@@ -17,7 +17,7 @@ async function make(value={...valid}){const r=await cards.POST(request('/api/car
 const auth=()=>`petals_admin=${signSession(Date.now()+3000000)}`;
 beforeAll(async()=>{state.db=new PGlite();await state.db.exec(readFileSync(new URL('../database/schema.sql',import.meta.url),'utf8'));process.env.DATABASE_URL='postgres://test';process.env.ADMIN_PASSWORD='test-only-password-12345';process.env.ADMIN_SESSION_SECRET='test-only-secret-abcdefghijklmnopqrstuvwxyz'},30000);
 beforeEach(async()=>{
- await state.db.exec('TRUNCATE cards,rate_limits');process.env.CARD_RATE_LIMIT='20';
+ await state.db.exec('TRUNCATE cards,rate_limits,submission_settings');process.env.CARD_RATE_LIMIT='20';
  process.env.AUTO_MODERATION_ENABLED='false';delete process.env.GEMINI_API_KEY;delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;delete process.env.MODERATION_MODEL;
  state.generateText.mockReset();
 });
@@ -94,6 +94,7 @@ describe('saved cards and privacy',()=>{
   expect((await (await cards.GET(request('/api/cards'))).json()).cards[0]).toMatchObject({gardenX:null,gardenY:null});
  });
  it('persists every decoration, including learning stickers, on shared cards',async()=>{
+  process.env.CARD_RATE_LIMIT=String(decorationOptions.length);
   for(const decoration of decorationOptions){
    const response=await cards.POST(request('/api/cards','POST',{...valid,decorations:[decoration]}));
    expect(response.status).toBe(201);
@@ -178,6 +179,9 @@ describe('existing Neon database migration',()=>{
    }
    await expect(old.query("UPDATE cards SET theme='unknown'")).rejects.toThrow();
    expect((await old.query('SELECT decorations,message FROM cards')).rows).toEqual([{decorations:['bees','cranes','music'],message:'Lời chúc trước khi nâng cấp'}]);
+   const subjectStickers=readFileSync(new URL('../database/migrations/011_subject_stickers.sql',import.meta.url),'utf8');
+   await old.exec(subjectStickers);await old.exec(subjectStickers);
+   expect((await old.query('SELECT decorations,message FROM cards')).rows).toEqual([{decorations:['bees','cranes','music'],message:'Lời chúc trước khi nâng cấp'}]);
    for(const decoration of decorationOptions){
     await old.query('UPDATE cards SET decorations=$1',[[decoration]]);
     expect((await old.query('SELECT decorations FROM cards')).rows).toEqual([{decorations:[decoration]}]);
@@ -192,6 +196,12 @@ describe('existing Neon database migration',()=>{
    expect((await old.query('SELECT status,public_opt_in FROM cards WHERE id=$1',['00000000-0000-4000-8000-000000000002'])).rows).toEqual([{status:'pending',public_opt_in:true}]);
    const aiModeration=readFileSync(new URL('../database/migrations/009_ai_moderation.sql',import.meta.url),'utf8');
    await old.exec(aiModeration);await old.exec(aiModeration);
+   const deadline=readFileSync(new URL('../database/migrations/010_submission_deadline.sql',import.meta.url),'utf8');
+   await old.exec(deadline);await old.exec(deadline);
+   expect((await old.query('SELECT rejection_enabled,reject_after FROM submission_settings')).rows).toEqual([{rejection_enabled:false,reject_after:null}]);
+   await old.exec("UPDATE submission_settings SET rejection_enabled=TRUE,reject_after='2026-11-21T00:00:00+07:00'");
+   await old.exec(deadline);
+   expect((await old.query('SELECT rejection_enabled FROM submission_settings')).rows).toEqual([{rejection_enabled:true}]);
    expect((await old.query('SELECT status,public_opt_in,moderation FROM cards ORDER BY id')).rows).toEqual([
     {status:'private',public_opt_in:false,moderation:{}},{status:'pending',public_opt_in:true,moderation:{}},
    ]);
@@ -369,4 +379,50 @@ describe('automated moderation',()=>{
 describe('moderator session',()=>{
  it('rejects wrong passwords and forged cookies, issues HttpOnly cookie and logs out',async()=>{expect((await session.POST(request('/api/admin/session','POST',{password:'wrong'}))).status).toBe(401);const r=await session.POST(request('/api/admin/session','POST',{password:process.env.ADMIN_PASSWORD}));expect(r.status).toBe(200);expect(r.headers.get('set-cookie')).toContain('HttpOnly; SameSite=Strict; Path=/api/admin');expect((await admin.GET(request('/api/admin','GET',undefined,'petals_admin=123.forged'))).status).toBe(401);expect((await admin.GET(request('/api/admin','GET',undefined,auth()))).status).toBe(200);expect((await session.DELETE(request('/api/admin/session','DELETE'))).headers.get('set-cookie')).toContain('Max-Age=0')});
  it('blocks repeated login attempts and denies admin when unconfigured',async()=>{for(let i=0;i<5;i++)expect((await session.POST(request('/api/admin/session','POST',{password:'wrong'}))).status).toBe(401);expect((await session.POST(request('/api/admin/session','POST',{password:'wrong'}))).status).toBe(429);const old=process.env.ADMIN_SESSION_SECRET;delete process.env.ADMIN_SESSION_SECRET;expect((await admin.GET(request('/api/admin'))).status).toBe(503);process.env.ADMIN_SESSION_SECRET=old});
+});
+
+describe('admin submission deadline',()=>{
+ const settings={rejectionEnabled:true,rejectAfter:'2020-11-20T17:00:00.000Z'};
+ const save=(value:unknown=settings,cookie:string|undefined=auth())=>admin.PATCH(request('/api/admin','PATCH',value,cookie));
+ it('defaults to disabled and persists authenticated settings across reads',async()=>{
+  expect((await (await admin.GET(request('/api/admin','GET',undefined,auth()))).json()).settings).toEqual({rejectionEnabled:false,rejectAfter:null});
+  expect((await save()).status).toBe(200);
+  const stored=(await (await admin.GET(request('/api/admin','GET',undefined,auth()))).json()).settings;
+  expect(stored.rejectionEnabled).toBe(true);expect(new Date(stored.rejectAfter).toISOString()).toBe(settings.rejectAfter);
+ });
+ it('requires an admin session and same-origin request to change settings',async()=>{
+  expect((await admin.PATCH(request('/api/admin','PATCH',settings))).status).toBe(401);
+  const req=new Request(base+'/api/admin',{method:'PATCH',headers:{origin:'https://elsewhere.test','content-type':'application/json',cookie:auth()},body:JSON.stringify(settings)});
+  expect((await admin.PATCH(req)).status).toBe(403);
+ });
+ it('rejects missing, malformed, or ambiguous deadlines and invalid flags',async()=>{
+  for(const value of [null,{}, {rejectionEnabled:'true',rejectAfter:null}, {rejectionEnabled:true,rejectAfter:null}, {rejectionEnabled:true,rejectAfter:'2026-11-21T00:00'}, {rejectionEnabled:true,rejectAfter:'not-a-date'}, {rejectionEnabled:true,rejectAfter:'2026-02-30T00:00:00.000Z'}]){
+   expect((await save(value)).status).toBe(400);
+  }
+ });
+ it('rejects late notes before AI review, hides them publicly, and permits manual restoration',async()=>{
+  const existing=await make();
+  await save();
+  process.env.AUTO_MODERATION_ENABLED='true';process.env.GEMINI_API_KEY='test-key';
+  state.generateText.mockResolvedValue({output:{decision:'approve',category:'appropriate',confidence:.99}});
+  const created=await make();expect(created.moderationStatus).toBe('rejected');
+  expect(created.moderationReason).toBe('submission_deadline');
+  expect(state.generateText).not.toHaveBeenCalled();
+  const stored=(await state.db.query('SELECT status,moderation FROM cards WHERE id=$1',[created.card.id])).rows[0];
+  expect(stored).toMatchObject({status:'rejected',moderation:{source:'deadline',reason:'submission_deadline',state:'done'}});
+  expect((await state.db.query('SELECT status FROM cards WHERE id=$1',[existing.card.id])).rows[0].status).toBe('pending');
+  expect((await cards.GET(request(`/api/cards?id=${created.card.id}`))).status).toBe(404);
+  expect((await (await cards.GET(request('/api/cards'))).json()).cards).toEqual([]);
+  expect((await cards.PATCH(request('/api/cards','PATCH',{id:created.card.id,editToken:created.editToken,shareSender:true}))).status).toBe(403);
+  expect((await admin.POST(request('/api/admin','POST',{id:created.card.id,status:'approved'},auth()))).status).toBe(200);
+  expect((await (await cards.GET(request('/api/cards'))).json()).cards[0].id).toBe(created.card.id);
+ });
+ it('continues normal moderation before the cutoff and when the setting is disabled',async()=>{
+  await save({...settings,rejectAfter:'2999-11-20T17:00:00.000Z'});
+  expect((await make()).moderationStatus).toBe('pending');
+  await save({...settings,rejectionEnabled:false});
+  expect((await make()).moderationStatus).toBe('pending');
+  await save({rejectionEnabled:false,rejectAfter:null});
+  expect((await make()).moderationStatus).toBe('pending');
+ });
 });

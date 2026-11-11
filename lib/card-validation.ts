@@ -1,6 +1,6 @@
 export const flowers=['tulip','rose','sunflower','cherry','lavender','daisy','lily','lotus','orchid','hydrangea','peony','cosmos','iris','daffodil','poppy','marigold','hibiscus','bluebell'] as const;
 export const themes=['meadow','heart','blossom','night'] as const;
-export const decorationOptions=['ribbon','butterflies','hearts','sparkles','fireflies','petals','bees','cranes','music','math','physics','english','history','geography','chemistry','books','pencil','graduation','literature'] as const;
+export const decorationOptions=['ribbon','butterflies','hearts','sparkles','fireflies','petals','bees','cranes','music','math','physics','english','history','geography','chemistry','books','pencil','graduation','literature','pe','it','biology','arts'] as const;
 export type Decoration=typeof decorationOptions[number];
 export type Card={id?:string;flower:string;theme:string;recipient:string;message:string;sender:string;anonymous:boolean;shareSender:boolean;decorations?:Decoration[];gardenX?:number|null;gardenY?:number|null};
 export const messageCharacterLimit=300;

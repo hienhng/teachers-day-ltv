@@ -43,11 +43,17 @@ export async function POST(req:Request){try{
  await rateLimit(req,'card',Number.isFinite(configuredLimit)?Math.max(1,Math.min(1000,configuredLimit)):20,3600000);
  const id=randomUUID(),editToken=randomBytes(32).toString('hex'),sql=database();
  const shareSender=!card.anonymous&&card.shareSender;
- await sql.query(`INSERT INTO cards(id,flower,theme,recipient,message,sender,anonymous,share_sender,edit_hash,decorations,public_opt_in,status)
-   VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::text[],TRUE,'pending')`,[id,card.flower,card.theme,card.recipient,card.message,card.sender,card.anonymous,shareSender,sha(editToken),card.decorations||[]]);
+ // Evaluate the cutoff and save the decision in the same statement, before AI review.
+ const inserted=await sql.query(`WITH policy AS (
+   SELECT EXISTS(SELECT 1 FROM submission_settings WHERE id=TRUE AND rejection_enabled AND reject_after<=statement_timestamp()) AS closed
+  ) INSERT INTO cards(id,flower,theme,recipient,message,sender,anonymous,share_sender,edit_hash,decorations,public_opt_in,status,moderation)
+   SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,$10::text[],TRUE,
+    CASE WHEN closed THEN 'rejected' ELSE 'pending' END,
+    CASE WHEN closed THEN jsonb_build_object('source','deadline','state','done','reason','submission_deadline','reviewedAt',statement_timestamp()) ELSE '{}'::jsonb END
+   FROM policy RETURNING status`,[id,card.flower,card.theme,card.recipient,card.message,card.sender,card.anonymous,shareSender,sha(editToken),card.decorations||[]]);
  // The letter is already saved: an unavailable reviewer must not turn a successful submission into a retry/duplicate.
- const moderationStatus=await moderateCard(id).catch(()=>'pending' as const);
- return json({card:{...card,id,shareSender},editToken,moderationStatus},201);
+ const moderationStatus=inserted[0].status==='rejected'?'rejected':await moderateCard(id).catch(()=>'pending' as const);
+ return json({card:{...card,id,shareSender},editToken,moderationStatus,...(inserted[0].status==='rejected'?{moderationReason:'submission_deadline'}:{})},201);
 }catch(e){return failure(e)}}
 
 export async function PATCH(req:Request){try{

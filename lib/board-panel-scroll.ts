@@ -1,4 +1,4 @@
-export const boardPanelInterval=5_000;
+export const boardPanelInterval=60_000;
 
 /** Scroll through the panels, using a duplicate first panel for a seamless loop. */
 export function startBoardPanelScroll(viewport:HTMLElement,board:HTMLElement){

@@ -10,7 +10,20 @@ export async function GET(req:Request){try{
  WHERE public_opt_in AND status IN ('pending','approved','rejected') AND ($2='all' OR status=$2)
  ORDER BY created_at DESC,id DESC LIMIT 26 OFFSET $1`,[pageOffset(req),status]);
  const {enabled,configured}=moderationConfiguration();
- return json({cards:rows.slice(0,25),hasMore:rows.length>25,automation:{enabled,configured}});
+ const settings=await sql.query('SELECT rejection_enabled AS "rejectionEnabled",reject_after AS "rejectAfter" FROM submission_settings WHERE id=TRUE');
+ return json({cards:rows.slice(0,25),hasMore:rows.length>25,automation:{enabled,configured},settings:settings[0]||{rejectionEnabled:false,rejectAfter:null}});
+}catch(e){return failure(e)}}
+export async function PATCH(req:Request){try{
+ requireOrigin(req);requireAdmin(req);
+ const v=await readBody(req,1000) as {rejectionEnabled?:unknown;rejectAfter?:unknown};
+ if(!v||typeof v.rejectionEnabled!=='boolean'||!(v.rejectAfter===null||typeof v.rejectAfter==='string'))throw new ApiError('Cài đặt không hợp lệ.');
+ const timestamp=typeof v.rejectAfter==='string'?Date.parse(v.rejectAfter):NaN;
+ if(v.rejectAfter!==null&&(!Number.isFinite(timestamp)||new Date(timestamp).toISOString()!==v.rejectAfter))throw new ApiError('Ngày giờ không hợp lệ.');
+ if(v.rejectionEnabled&&v.rejectAfter===null)throw new ApiError('Vui lòng chọn thời hạn trước khi bật tự động từ chối.');
+ const rows=await database().query(`INSERT INTO submission_settings(id,rejection_enabled,reject_after) VALUES(TRUE,$1,$2)
+  ON CONFLICT(id) DO UPDATE SET rejection_enabled=EXCLUDED.rejection_enabled,reject_after=EXCLUDED.reject_after
+  RETURNING rejection_enabled AS "rejectionEnabled",reject_after AS "rejectAfter"`,[v.rejectionEnabled,v.rejectAfter]);
+ return json({settings:rows[0]});
 }catch(e){return failure(e)}}
 export async function POST(req:Request){try{
  requireOrigin(req);requireAdmin(req);const v=await readBody(req,1000) as {id?:unknown;status?:unknown;action?:unknown};

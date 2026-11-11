@@ -4,7 +4,7 @@ BEGIN;
 CREATE TABLE cards (
  id UUID PRIMARY KEY,
  flower TEXT NOT NULL CHECK (flower IN ('tulip','rose','sunflower','cherry','lavender','daisy','lily','lotus','orchid','hydrangea','peony','cosmos','iris','daffodil','poppy','marigold','hibiscus','bluebell')),
- decorations TEXT[] NOT NULL DEFAULT '{}' CHECK (decorations <@ ARRAY['ribbon','butterflies','hearts','sparkles','fireflies','petals','bees','cranes','music','math','physics','english','history','geography','chemistry','books','pencil','graduation','literature']::text[] AND cardinality(decorations)<=3 AND array_position(decorations,NULL) IS NULL),
+ decorations TEXT[] NOT NULL DEFAULT '{}' CHECK (decorations <@ ARRAY['ribbon','butterflies','hearts','sparkles','fireflies','petals','bees','cranes','music','math','physics','english','history','geography','chemistry','books','pencil','graduation','literature','pe','it','biology','arts']::text[] AND cardinality(decorations)<=3 AND array_position(decorations,NULL) IS NULL),
  theme TEXT NOT NULL CHECK (theme IN ('meadow','heart','blossom','night')),
  garden_x DOUBLE PRECISION,
  garden_y DOUBLE PRECISION,
@@ -31,4 +31,11 @@ CREATE TABLE rate_limits (
  expires_at TIMESTAMPTZ NOT NULL
 );
 CREATE INDEX rate_limits_expiry_idx ON rate_limits(expires_at);
+CREATE TABLE submission_settings (
+ id BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (id),
+ rejection_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+ reject_after TIMESTAMPTZ,
+ CHECK (NOT rejection_enabled OR reject_after IS NOT NULL)
+);
+INSERT INTO submission_settings(id) VALUES(TRUE);
 COMMIT;

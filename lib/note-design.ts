@@ -46,4 +46,6 @@ export const noteStickers:Record<Decoration,{name:string;symbol:string}>={
  books:{name:'Chồng sách',symbol:'▤'},pencil:{name:'Bút chì',symbol:'✎'},
  graduation:{name:'Mũ tốt nghiệp',symbol:'◇'},
  literature:{name:'Ngữ văn',symbol:'✒'},
+ pe:{name:'Thể dục',symbol:'⚽'},it:{name:'Tin học',symbol:'⌨'},
+ biology:{name:'Sinh học',symbol:'❧'},arts:{name:'Mỹ thuật',symbol:'🎨'},
 };
