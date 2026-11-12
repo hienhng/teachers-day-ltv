@@ -39,7 +39,7 @@ describe('direct letter composer',()=>{
  });
  it('preserves every editable paper silhouette at its original aspect ratio',()=>{
   for(const theme of ['meadow','heart','blossom','night']){
-   const html=renderToStaticMarkup(createElement(StickyNote,{card:{...card,theme,message:'a'.repeat(300)},onChange:()=>{}}));
+   const html=renderToStaticMarkup(createElement(StickyNote,{card:{...card,theme,message:'a'.repeat(150)},onChange:()=>{}}));
    expect(html).toContain('preserveAspectRatio="xMidYMid meet"');
    expect(html).not.toContain('preserveAspectRatio="none"');
    expect(html).toContain('note-editable');
@@ -48,7 +48,7 @@ describe('direct letter composer',()=>{
  it('enforces writing limits on the letter and locks the form during submission',()=>{
   const html=renderToStaticMarkup(createElement(MakerPanel,{card,busy:true,onChange:()=>{},onSubmit:()=>{},onSelect:()=>{}}));
   expect(html).toContain('class="composer-fields" disabled');
-  expect(html).toContain('minLength="5"');expect(html).toContain('maxLength="300"');
+  expect(html).toContain('minLength="5"');expect(html).toContain('maxLength="150"');
   expect(html).toContain('maxLength="60"');expect(html).toContain('maxLength="40"');
  });
  it('shares named senders automatically while keeping anonymous sending available',()=>{
@@ -62,7 +62,7 @@ describe('direct letter composer',()=>{
   expect(html).toMatch(/id="letter-sender"[^>]*required/);
   const anonymous=renderToStaticMarkup(createElement(MakerPanel,{card:{...card,anonymous:true},busy:false,onChange:()=>{},onSubmit:()=>{},onSelect:()=>{}}));
   expect(anonymous).not.toContain('id="letter-sender"');
-  expect(anonymous).toContain('Một người học trò');
+  expect(anonymous).toContain('Một người gửi yêu thương');
   expect(anonymous).toMatch(/type="checkbox"[^>]*checked/);
 
 

@@ -197,15 +197,36 @@ footer{background:#f0eee2;border-top:1px solid #dcd9c8;color:#67705f;font-size:8
 .panel .text-link,.received .text-link{color:#5c754c}
 .card-dialog{width:min(800px,calc(100vw - 24px));height:min(800px,calc(100svh - 24px));height:min(800px,calc(100dvh - 24px));max-width:calc(100vw - 24px);max-height:calc(100svh - 24px);max-height:calc(100dvh - 24px);padding:44px 0 0;overflow:visible}
 .card-dialog::backdrop{background:#152f2bd1;backdrop-filter:blur(3px)}
-.card-dialog .note-viewport{position:relative;width:100%;height:100%;padding:0;overflow:visible}
+.card-dialog[open]{display:grid;grid-template-rows:minmax(0,1fr) auto}
+.card-dialog .note-viewport{position:relative;width:100%;height:100%;min-height:0;padding:0;overflow:visible}
 .card-dialog .sticky-note{position:absolute;top:50%;left:50%;width:470px;max-width:none;margin:0;transform:translate(-50%,-50%) scale(var(--note-dialog-scale,0));transform-origin:center}
+.board-note-actions{position:relative;z-index:5;max-width:100%;padding:12px 8px 4px;color:#f5f0db;text-align:center;transform:translateY(calc(-1 * var(--note-dialog-action-lift,0px)))}
+.board-note-action-buttons{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:16px;padding:8px 5px;background:none;border:0;border-radius:0;box-shadow:none}
+.board-note-action{--action-paper:#f6dc86;--action-tilt:-3deg;position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:54px;padding:12px 20px 13px;border:0;border-radius:0;background:none;color:#343b37;font:600 15px/1.4 var(--site-font);white-space:nowrap;transform:rotate(var(--action-tilt));transition:transform .15s}
+.board-note-action-paper{position:absolute;z-index:-1;inset:0;width:100%;height:100%;overflow:visible;stroke:#343b37;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(2px 3px 0 #102b26)}
+.board-note-action-paper-fill{fill:var(--action-paper)}
+.board-note-action-icon{width:26px;height:26px;flex:none;stroke:currentColor;stroke-width:1.45;stroke-linecap:round;stroke-linejoin:round}
+.board-note-action span{position:relative}
+.board-note-action span::after{content:"";position:absolute;left:-1px;right:-2px;bottom:-4px;height:3px;border-bottom:1px solid currentColor;border-radius:50%;transform:rotate(-3deg);opacity:.45}
+.board-note-action-save{--action-paper:#f7eee0;--action-tilt:2deg}
+.board-note-actions-spark{position:absolute;left:-26px;top:0;width:29px;height:34px;stroke:#f3dc99;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transform:rotate(-12deg);pointer-events:none}
+@media(hover:hover){.board-note-action:hover:not(:disabled){transform:translateY(-3px) rotate(calc(var(--action-tilt) * -1))}.board-note-action-share:hover:not(:disabled){--action-paper:#f9e6a3}.board-note-action-save:hover:not(:disabled){--action-paper:#fff8eb}}
+.board-note-action:active:not(:disabled){transform:translate(1px,2px) rotate(var(--action-tilt))}
+.board-note-action:focus-visible{outline:2px dashed #f3dc99;outline-offset:5px}
+.board-note-action:disabled{opacity:.55;cursor:default}
+.board-note-action-status{min-height:20px;max-width:360px;margin:12px auto 0;color:#e4e9dc;font:400 12px/1.65 var(--site-font);text-wrap:balance;overflow-wrap:anywhere}
+.board-note-share-link{display:block;width:min(420px,100%);margin:12px auto 0;padding:10px 0 0;border:0;border-top:1px dashed #d6ddcd88;border-radius:0;background:none;font-size:12px;text-align:left}
+.board-note-share-link input{border:1px solid #343b37;border-radius:2px 7px 3px 5px;background:#faf3e1;box-shadow:2px 2px 0 #102b26;font-size:13px;color:#35573e}
+@media(max-width:360px){.board-note-action{min-height:50px;padding:10px 15px 12px;gap:6px;font-size:14px}.board-note-action-buttons{gap:12px}.board-note-actions-spark{left:-17px;width:21px}.board-note-action-icon{width:23px;height:23px}}
+@media(prefers-reduced-motion:no-preference){.board-note-action-spinner{transform-origin:center;animation:board-note-action-spin .9s linear infinite}}
+@keyframes board-note-action-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:no-preference){
  .card-dialog[open]::backdrop{animation:note-dialog-backdrop .22s ease-out both}
  .card-dialog[open][data-closing=true]::backdrop{animation:note-dialog-backdrop-out .34s ease-in both}
 }
 @keyframes note-dialog-backdrop{from{opacity:0}to{opacity:1}}
 @keyframes note-dialog-backdrop-out{from{opacity:1}to{opacity:0}}
-.card-dialog[data-closing=true] .close-modal{visibility:hidden}
+.card-dialog[data-closing=true] .close-modal,.card-dialog[data-closing=true] .board-note-actions{visibility:hidden}
 .close-modal{top:0;right:0;width:44px;height:44px;color:#f5f0db;z-index:5}
 .received .section-heading h1{font:32px/1.5 var(--site-font);color:#34533d}
 .received .section-heading .eyebrow{color:#8c7654}

@@ -2,7 +2,7 @@ import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
 import {startBoardPanelScroll} from '../lib/board-panel-scroll';
 
 describe('board panel auto-scroll',()=>{
- let viewport:HTMLElement,board:HTMLElement,stop:()=>void,clock:number;
+ let viewport:HTMLElement,board:HTMLElement,stop:()=>void,clock:number,boardClasses:Set<string>;
  beforeEach(()=>{
   vi.useFakeTimers();clock=0;
   vi.stubGlobal('performance',{now:()=>clock});
@@ -10,51 +10,77 @@ describe('board panel auto-scroll',()=>{
   vi.stubGlobal('cancelAnimationFrame',clearTimeout);
   vi.stubGlobal('window',{matchMedia:()=>({matches:false})});
   const doc=new EventTarget();Object.assign(doc,{hidden:false});vi.stubGlobal('document',doc);
-  viewport=Object.assign(new EventTarget(),{scrollTop:0,clientTop:0,clientHeight:500,scrollHeight:2000,classList:{add:vi.fn(),remove:vi.fn()},getBoundingClientRect:()=>({top:30})}) as unknown as HTMLElement;
-  board={querySelectorAll:()=>[0,500,1000,1500].map(top=>({getBoundingClientRect:()=>({top:30+top-viewport.scrollTop}),hasAttribute:(name:string)=>name==='data-board-loop-clone'&&top===1500}))} as unknown as HTMLElement;
+  boardClasses=new Set();
+  viewport=Object.assign(new EventTarget(),{scrollTop:0,clientTop:0,clientHeight:500,classList:{add:vi.fn(),remove:vi.fn()},getBoundingClientRect:()=>({top:30})}) as unknown as HTMLElement;
+  Object.defineProperty(viewport,'scrollHeight',{get:()=>boardClasses.has('board-is-looping')?2000:1500});
+  board={classList:{add:(name:string)=>boardClasses.add(name),remove:(name:string)=>boardClasses.delete(name)},querySelectorAll:()=>[0,500,1000,1500].map(top=>({getBoundingClientRect:()=>({top:30+(top===1500&&!boardClasses.has('board-is-looping')?0:top)-viewport.scrollTop}),hasAttribute:(name:string)=>name==='data-board-loop-clone'&&top===1500}))} as unknown as HTMLElement;
   stop=startBoardPanelScroll(viewport,board);
  });
  afterEach(()=>{stop();vi.useRealTimers();vi.unstubAllGlobals()});
- it('waits 60 seconds, then eases down and lands exactly on the next panel',()=>{
-  vi.advanceTimersByTime(59_999);expect(viewport.scrollTop).toBe(0);
+ it('waits 5 seconds, then eases down and lands exactly on the next panel',()=>{
+  vi.advanceTimersByTime(4_999);expect(viewport.scrollTop).toBe(0);
   vi.advanceTimersByTime(1+256);expect(viewport.scrollTop).toBeGreaterThan(250);expect(viewport.scrollTop).toBeLessThan(500);
   vi.advanceTimersByTime(800);expect(viewport.scrollTop).toBe(500);
-  vi.advanceTimersByTime(61_100);expect(viewport.scrollTop).toBe(1000);
+  vi.advanceTimersByTime(6_100);expect(viewport.scrollTop).toBe(1000);
  });
  it('continues downward through the duplicate, resets invisibly, and repeats',()=>{
   viewport.scrollTop=1000;
-  vi.advanceTimersByTime(60_256);expect(viewport.scrollTop).toBeGreaterThan(1250);expect(viewport.scrollTop).toBeLessThan(1500);
+  expect(boardClasses.has('board-is-looping')).toBe(false);
+  vi.advanceTimersByTime(5_256);expect(viewport.scrollTop).toBeGreaterThan(1250);expect(viewport.scrollTop).toBeLessThan(1500);
+  expect(boardClasses.has('board-is-looping')).toBe(true);
   vi.advanceTimersByTime(800);expect(viewport.scrollTop).toBe(0);
-  vi.advanceTimersByTime(61_000);expect(viewport.scrollTop).toBe(500);
-  vi.advanceTimersByTime(61_000);expect(viewport.scrollTop).toBe(1000);
-  vi.advanceTimersByTime(61_000);expect(viewport.scrollTop).toBe(0);
+  expect(boardClasses.has('board-is-looping')).toBe(false);
+  vi.advanceTimersByTime(6_000);expect(viewport.scrollTop).toBe(500);
+  vi.advanceTimersByTime(6_000);expect(viewport.scrollTop).toBe(1000);
+  vi.advanceTimersByTime(6_000);expect(viewport.scrollTop).toBe(0);
  });
- it('continues from the first panel if manually scrolled onto its duplicate',()=>{
-  viewport.scrollTop=1500;
-  vi.advanceTimersByTime(61_100);expect(viewport.scrollTop).toBe(500);
+ it.each(['wheel','pointerdown','touchstart','keydown'])('hides the clone and returns to the first real panel when %s interrupts a wrap',event=>{
+  viewport.scrollTop=1000;
+  vi.advanceTimersByTime(5_256);
+  viewport.dispatchEvent(new Event(event));
+  expect(viewport.scrollTop).toBe(0);
+  expect(boardClasses.has('board-is-looping')).toBe(false);
+  expect(viewport.scrollHeight).toBe(1500);
+  vi.advanceTimersByTime(4_999);expect(viewport.scrollTop).toBe(0);
+  vi.advanceTimersByTime(1100);expect(viewport.scrollTop).toBe(500);
+ });
+ it('returns to the last real panel when a wrap is interrupted near its start',()=>{
+  viewport.scrollTop=1000;
+  vi.advanceTimersByTime(5_016);
+  viewport.dispatchEvent(new Event('wheel'));
+  expect(viewport.scrollTop).toBe(1000);
+  expect(boardClasses.has('board-is-looping')).toBe(false);
+ });
+ it('removes the temporary clone from scrolling when unmounted mid-wrap',()=>{
+  viewport.scrollTop=1000;
+  vi.advanceTimersByTime(5_256);stop();
+  expect(boardClasses.has('board-is-looping')).toBe(false);
+  expect(viewport.scrollTop).toBe(0);
+  vi.advanceTimersByTime(6_100);expect(viewport.scrollTop).toBe(0);
  });
  it('restarts the countdown after manual navigation and follows the current panel',()=>{
   vi.advanceTimersByTime(3_000);viewport.scrollTop=500;viewport.dispatchEvent(new Event('wheel'));
-  vi.advanceTimersByTime(59_999);expect(viewport.scrollTop).toBe(500);
+  vi.advanceTimersByTime(4_999);expect(viewport.scrollTop).toBe(500);
   vi.advanceTimersByTime(1100);expect(viewport.scrollTop).toBe(1000);
  });
  it('cancels an animation and its timer when paused or unmounted',()=>{
-  vi.advanceTimersByTime(60_250);const position=viewport.scrollTop;stop();
-  vi.advanceTimersByTime(60_000);expect(viewport.scrollTop).toBe(position);
+  vi.advanceTimersByTime(5_250);const position=viewport.scrollTop;stop();
+  vi.advanceTimersByTime(5_000);expect(viewport.scrollTop).toBe(position);
  });
  it('changes panels without animation when reduced motion is requested',()=>{
   window.matchMedia=vi.fn(()=>({matches:true})) as unknown as typeof window.matchMedia;
-  vi.advanceTimersByTime(60_000);expect(viewport.scrollTop).toBe(500);
-  vi.advanceTimersByTime(60_000);expect(viewport.scrollTop).toBe(1000);
-  vi.advanceTimersByTime(60_000);expect(viewport.scrollTop).toBe(0);
+  vi.advanceTimersByTime(5_000);expect(viewport.scrollTop).toBe(500);
+  vi.advanceTimersByTime(5_000);expect(viewport.scrollTop).toBe(1000);
+  vi.advanceTimersByTime(5_000);expect(viewport.scrollTop).toBe(0);
+  expect(boardClasses.has('board-is-looping')).toBe(false);
  });
  it('does not advance while the tab is hidden',()=>{
-  Object.assign(document,{hidden:true});vi.advanceTimersByTime(60_000);expect(viewport.scrollTop).toBe(0);
+  Object.assign(document,{hidden:true});vi.advanceTimersByTime(5_000);expect(viewport.scrollTop).toBe(0);
   Object.assign(document,{hidden:false});document.dispatchEvent(new Event('visibilitychange'));
-  vi.advanceTimersByTime(61_100);expect(viewport.scrollTop).toBe(500);
+  vi.advanceTimersByTime(6_100);expect(viewport.scrollTop).toBe(500);
  });
  it('continues auto-scrolling when notes have expanded to fit their content',()=>{
   board.querySelectorAll=(()=>[0,500,1000,1500].map(top=>({getBoundingClientRect:()=>({top:30+top-viewport.scrollTop}),hasAttribute:(name:string)=>name==='data-expanded'||name==='data-board-loop-clone'&&top===1500}))) as unknown as typeof board.querySelectorAll;
-  vi.advanceTimersByTime(61_100);expect(viewport.scrollTop).toBe(500);
+  vi.advanceTimersByTime(6_100);expect(viewport.scrollTop).toBe(500);
  });
 });

@@ -5,7 +5,7 @@ import './chalkboard-hero.css';
 
 const steps=[
  {number:'01',symbol:'▧',title:'Chọn một tờ giấy nhỏ',text:'Một màu bạn thích, vài nét trang trí. Một tờ note mang dấu ấn của riêng bạn.'},
- {number:'02',symbol:'✎',title:'Viết điều chưa kịp nói',text:'Một kỷ niệm trong lớp, một lời cảm ơn, hay lời chúc bạn muốn dành tặng thầy cô.'},
+ {number:'02',symbol:'✎',title:'Viết điều chưa kịp nói',text:'Một lời chúc gửi người đồng nghiệp, hay lời cảm ơn từ học trò dành tặng thầy cô. Chỉ cần viết thật lòng.'},
  {number:'03',symbol:'↗',title:'Gửi đến người gieo chữ',text:'Gửi riêng bằng đường dẫn, hoặc góp lời nhắn lên bảng tri ân của trường.'},
 ];
 export function Homepage({onCreate,onGarden,onButterfly}:{onCreate:()=>void;onGarden:()=>void;onButterfly:()=>void}){
@@ -28,13 +28,13 @@ export function Homepage({onCreate,onGarden,onButterfly}:{onCreate:()=>void;onGa
      <p className="chalk-hero-edition"><span aria-hidden="true"></span> MÙA TRI ÂN · 20 / 11 <span aria-hidden="true"></span></p>
      <h1 id="home-title">Có những bài học<br/>ở lại <em>trong tim.<svg viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true"><path d="M4 10Q92 1 169 9T295 6M27 17Q155 8 272 15"/></svg></em></h1>
      <p className="teachers-lead">Một tờ giấy nhỏ. Một lời cảm ơn lớn.</p>
-     <p className="teachers-description">Gửi thầy cô một lời nhắn từ trái tim. Cùng LTPC lấp đầy chiếc bảng xanh bằng những kỷ niệm, lời chúc và lòng biết ơn.</p>
+     <p className="teachers-description">Dù là đồng nghiệp hay học trò, bạn đều có thể gửi thầy cô một lời nhắn từ trái tim. Cùng LTPC lấp đầy chiếc bảng xanh bằng những kỷ niệm, lời chúc và lòng biết ơn.</p>
      <div className="teachers-actions"><button className="classroom-button" onClick={onCreate}><NoteIcon/>Viết lời tri ân <span aria-hidden="true">↗</span></button><button className="board-link" onClick={onGarden}>Ghé bảng tri ân <span aria-hidden="true">→</span></button></div>
-     <p className="hero-postscript"><span aria-hidden="true">✎</span> Dành cho thầy cô, từ những người học trò.</p>
+     <p className="hero-postscript"><span aria-hidden="true">✎</span> Dành cho thầy cô, từ những người đồng nghiệp và học trò.</p>
     </div>
     <aside className="chalk-hero-margin chalk-hero-margin-right" aria-label="Lời chúc ngày Nhà giáo Việt Nam">
      <DoodleArt kind="sun" className="chalk-hero-sun"/>
-     <div className="sample-note sample-pink"><span className="sample-tape" aria-hidden="true"/><small>GỬI NGƯỜI GIEO CHỮ</small><p>Thầy cô là<br/>một phần thật đẹp<br/>của thanh xuân.</p><span className="sample-heart" aria-hidden="true">♡</span></div>
+     <div className="sample-note sample-pink"><span className="sample-tape" aria-hidden="true"/><small>TỪ MỘT NGƯỜI ĐỒNG NGHIỆP</small><p>Cảm ơn vì đã<br/>cùng sẻ chia<br/>và giữ lửa nghề.</p><span className="sample-heart" aria-hidden="true">♡</span></div>
      <div className="chalk-hero-flower" aria-hidden="true"><svg viewBox="0 0 100 130" fill="none"><path d="M51 123c6-30 8-55 2-75m2 51c-22-1-31-13-29-23 15 0 25 9 29 23Zm1-18c21-1 29-15 26-23-14 1-23 10-26 23Z"/><path d="M43 24C20 5 18 43 35 44 14 58 45 76 51 54c5 23 36 5 21-9 24 0 12-33-5-21C76 1 40 1 43 24Z"/><circle cx="52" cy="36" r="10"/></svg><span>Merci, thầy cô!</span></div>
     </aside>
     <span className="chalk-hero-star chalk-hero-star-one" aria-hidden="true"></span><span className="chalk-hero-star chalk-hero-star-two" aria-hidden="true">✳</span>
@@ -47,12 +47,12 @@ export function Homepage({onCreate,onGarden,onButterfly}:{onCreate:()=>void;onGa
    </div>
    <div className="chalk-hero-tray" aria-hidden="true"><b/><i/><i/><i/></div>
   </section>
-  <div className="gratitude-ribbon" aria-hidden="true"><span>CẢM ƠN VÌ ĐÃ DẠY CHÚNG EM</span><i>✦</i><span>KIẾN THỨC · LÒNG TỐT · NHỮNG ƯỚC MƠ</span><i>✦</i><span>HAPPY VIETNAMESE TEACHERS’ DAY</span></div>
+  <div className="gratitude-ribbon" aria-hidden="true"><span>CẢM ƠN NHỮNG NGƯỜI GIEO CHỮ</span><i>✦</i><span>KIẾN THỨC · LÒNG TỐT · NHỮNG ƯỚC MƠ</span><i>✦</i><span>HAPPY VIETNAMESE TEACHERS’ DAY</span></div>
   <section className="teachers-how" id="how" aria-labelledby="how-title">
    <div className="teachers-section-heading"><DoodleArt kind="sparkles" className="how-sparkles"/><p className="edition-label">NHỎ THÔI, NHƯNG THẬT LÒNG</p><h2 id="how-title">Lời cảm ơn của bạn bắt đầu từ đây.</h2><p>Không cần viết thật hay. Chỉ cần viết bằng chính mình.</p></div>
    <ol className="teachers-steps">{steps.map(step=><li key={step.number}><div className="step-number">{step.number}<span aria-hidden="true">{step.symbol}</span></div><h3>{step.title}</h3><p>{step.text}</p></li>)}</ol>
   </section>
   <HomepageEvent onCreate={onCreate}/>
-  <section className="teachers-board-invite"><div><p className="edition-label">CHIẾC BẢNG CHUNG CỦA CHÚNG MÌNH</p><h2>Mỗi tờ note, một điều đáng nhớ.</h2><p>Những lời tri ân dành cho thầy cô Lương Thế Vinh, được gìn giữ trên cùng một chiếc bảng.</p></div><button className="classroom-button" onClick={onGarden}>Mở bảng tri ân <span aria-hidden="true">↗</span></button></section>
+  <section className="teachers-board-invite"><div><p className="edition-label">CHIẾC BẢNG CHUNG CỦA LTV</p><h2>Mỗi tờ note là một điều đáng nhớ.</h2><p>Những lời tri ân dành cho thầy cô Lương Thế Vinh, được gìn giữ trên cùng một chiếc bảng.</p></div><button className="classroom-button" onClick={onGarden}>Mở bảng tri ân <span aria-hidden="true">↗</span></button></section>
  </main>;
 }

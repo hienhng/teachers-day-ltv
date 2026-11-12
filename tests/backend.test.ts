@@ -74,6 +74,37 @@ describe('saved cards and privacy',()=>{
   const fullFirstPlot=await (await cards.GET(request('/api/cards'))).json();
   expect(fullFirstPlot).toMatchObject({page:0,hasMore:false});expect(fullFirstPlot.cards).toHaveLength(20);
  });
+ it('finds an approved note on the correct board page, including tied timestamps and mobile pages',async()=>{
+  await state.db.query(`INSERT INTO cards(id,flower,theme,recipient,message,sender,public_opt_in,status,edit_hash,created_at)
+   SELECT ('00000000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,'tulip','meadow','Thầy cô','Cảm ơn thầy cô rất nhiều!','Học trò',TRUE,'approved',repeat('a',64),NOW()
+   FROM generate_series(1,25) n`);
+  // Newer invisible notes must not shift the approved board's page boundaries.
+  await state.db.exec(`UPDATE cards SET status='pending' WHERE id='00000000-0000-4000-8000-000000000025';
+   UPDATE cards SET status='rejected' WHERE id='00000000-0000-4000-8000-000000000024';
+   UPDATE cards SET status='private',public_opt_in=FALSE WHERE id='00000000-0000-4000-8000-000000000023'`);
+  const note='00000000-0000-4000-8000-000000000002';
+  for(const [limit,page,count] of [[20,1,2],[10,2,2]]){
+   const response=await cards.GET(request(`/api/cards?note=${note}&limit=${limit}&offset=0`));
+   expect(response.status).toBe(200);
+   const board=await response.json();
+   expect(board).toMatchObject({page,hasMore:false});
+   expect(board.cards).toHaveLength(count);
+   expect(board.cards).toContainEqual(expect.objectContaining({id:note}));
+   expect(board.cards.every((card:Record<string,unknown>)=>!('edit_hash' in card))).toBe(true);
+  }
+  const first=await (await cards.GET(request('/api/cards?note=00000000-0000-4000-8000-000000000022&offset=20'))).json();
+  expect(first).toMatchObject({page:0,hasMore:true});
+ });
+ it('does not expose pending, rejected, private, missing, or malformed notes through board links',async()=>{
+  const created=await make();
+  for(const status of ['pending','rejected','private']){
+   await state.db.query("UPDATE cards SET status=$2,public_opt_in=($2<>'private') WHERE id=$1",[created.card.id,status]);
+   expect((await cards.GET(request(`/api/cards?note=${created.card.id}`))).status).toBe(404);
+  }
+  for(const id of ['00000000-0000-4000-8000-000000000000','invalid']){
+   expect((await cards.GET(request(`/api/cards?note=${id}`))).status).toBe(404);
+  }
+ });
  it('automatically places garden flowers and preserves explicitly supplied positions',async()=>{
   const c=await make();
   for(const position of [{gardenX:0,gardenY:50},{gardenX:50,gardenY:95},{gardenX:'50',gardenY:50},{gardenX:50,gardenY:null}]){
@@ -126,7 +157,7 @@ describe('saved cards and privacy',()=>{
  });
  it('uses the actual request Host when Next normalizes its internal URL',()=>{expect(()=>requireOrigin(new Request('http://localhost:3000/api/cards',{headers:{host:'127.0.0.1:3000',origin:'http://127.0.0.1:3000'}}))).not.toThrow();expect(()=>requireOrigin(new Request('http://localhost:3000/api/cards',{headers:{host:'127.0.0.1:3000',origin:'https://evil.test'}}))).toThrow()});
  it('persists a Unicode card and reads it in a separate request without exposing edit credentials',async()=>{const created=await make();const r=await cards.GET(request(`/api/cards?id=${created.card.id}`));const body=await r.json();expect(body.card.message).toBe(valid.message);expect(body.card).not.toHaveProperty('edit_hash');expect(body).not.toHaveProperty('editToken');expect((await (await cards.GET(request('/api/cards'))).json()).cards).toEqual([])});
- it('rejects invalid fields, forged origins, null bodies and too-large requests',async()=>{for(const v of [null,{...valid,message:'x'},{...valid,flower:'unknown'},{...valid,recipient:' '},{...valid,message:'a'.repeat(301)}])expect((await cards.POST(request('/api/cards','POST',v))).status).toBe(400);expect((await cards.POST(new Request(base+'/api/cards',{method:'POST',headers:{origin:'https://evil.test','Content-Type':'application/json'},body:JSON.stringify(valid)}))).status).toBe(403);expect((await cards.POST(request('/api/cards','POST',{...valid,message:'a'.repeat(11000)}))).status).toBe(413)});
+ it('rejects invalid fields, forged origins, null bodies and too-large requests',async()=>{for(const v of [null,{...valid,message:'x'},{...valid,flower:'unknown'},{...valid,recipient:' '},{...valid,message:'a'.repeat(151)}])expect((await cards.POST(request('/api/cards','POST',v))).status).toBe(400);expect((await cards.POST(new Request(base+'/api/cards',{method:'POST',headers:{origin:'https://evil.test','Content-Type':'application/json'},body:JSON.stringify(valid)}))).status).toBe(403);expect((await cards.POST(request('/api/cards','POST',{...valid,message:'a'.repeat(11000)}))).status).toBe(413)});
  it('removes sender data for anonymous cards',async()=>{const created=await make({...valid,anonymous:true});const body=await (await cards.GET(request(`/api/cards?id=${created.card.id}`))).json();expect(body.card.sender).toBe('');expect(body.card.anonymous).toBe(true)});
  it('requires edit token and approval, and hides nickname even via the public card ID',async()=>{const c=await make();expect((await cards.PATCH(request('/api/cards','PATCH',{id:c.card.id,editToken:'x'.repeat(64),shareSender:false,gardenX:42.5,gardenY:66}))).status).toBe(403);expect((await cards.PATCH(request('/api/cards','PATCH',{id:c.card.id,editToken:c.editToken,shareSender:false,gardenX:42.5,gardenY:66}))).status).toBe(200);expect((await (await cards.GET(request('/api/cards'))).json()).cards).toEqual([]);expect((await admin.GET(request('/api/admin'))).status).toBe(401);expect((await admin.POST(request('/api/admin','POST',{id:c.card.id,status:'approved'}))).status).toBe(401);expect((await admin.POST(request('/api/admin','POST',{id:c.card.id,status:'approved'},auth()))).status).toBe(200);const garden=await (await cards.GET(request('/api/cards'))).json();expect(garden.cards).toHaveLength(1);expect(garden.cards[0].sender).toBe('');expect((await (await cards.GET(request(`/api/cards?id=${c.card.id}`))).json()).card.sender).toBe('');expect((await admin.POST(request('/api/admin','POST',{id:c.card.id,status:'rejected'},auth()))).status).toBe(200);expect((await (await cards.GET(request('/api/cards'))).json()).cards).toHaveLength(0);expect((await cards.GET(request(`/api/cards?id=${c.card.id}`))).status).toBe(404)});
  it('enforces atomic rate limits and preserves explicit sender sharing',async()=>{process.env.CARD_RATE_LIMIT='1';const c=await make();expect((await cards.POST(request('/api/cards','POST',valid))).status).toBe(429);await cards.PATCH(request('/api/cards','PATCH',{id:c.card.id,editToken:c.editToken,shareSender:true,gardenX:42.5,gardenY:66}));await admin.POST(request('/api/admin','POST',{id:c.card.id,status:'approved'},auth()));expect((await (await cards.GET(request('/api/cards'))).json()).cards[0].sender).toBe(valid.sender)});

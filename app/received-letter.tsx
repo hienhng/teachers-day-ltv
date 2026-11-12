@@ -69,11 +69,10 @@ export function ReceivedLetter({recipient,note,actions}:{recipient:string;note:R
    </div>
    <button type="button" className="envelope-trigger" onClick={open} aria-controls={noteId} aria-expanded={phase==='open'} disabled={phase!=='sealed'} tabIndex={phase==='sealed'?0:-1} aria-hidden={phase!=='sealed'}>
     <span className="envelope-seal" aria-hidden="true">♡</span>
-    <span className="envelope-address">Kính gửi <strong>{recipient||'Thầy cô kính mến'}</strong></span>
+    <span className="envelope-address"><strong>{recipient||'Thầy cô kính mến'}</strong></span>
     <span className="envelope-open-label">Chạm để mở thư <span aria-hidden="true">↗</span></span>
    </button>
   </div>
-  {phase==='opening'&&<button type="button" className="text-link envelope-skip" onClick={()=>setPhase('open')}>Đọc lời nhắn ngay →</button>}
   <div className="received-letter-actions" hidden={phase!=='open'}>{actions}</div>
  </section>;
 }

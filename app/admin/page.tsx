@@ -106,12 +106,12 @@ export default function Admin() {
    {signedIn ? <button className="admin-button admin-quiet" disabled={locked} onClick={logout}>{busy === 'logout' ? 'Đang đăng xuất…' : 'Đăng xuất ↗'}</button> : <a className="admin-back" href="/">← Về trạm tri ân</a>}
   </header>
   <div className={`admin-content ${signedIn ? '' : 'admin-content-login'}`}>
-   <div className="admin-heading"><div><span className="admin-eyebrow">GỬI NGƯỜI GIEO CHỮ · 20/11</span><h1>{signedIn ? 'Duyệt lời tri ân' : 'Gìn giữ những lời yêu thương.'}</h1><p>{signedIn ? 'Một chút quan tâm, để mỗi lời nhắn trên bảng chung đều thật đẹp.' : 'Không gian dành cho LTPC chăm sóc và duyệt những lời nhắn gửi đến thầy cô.'}</p></div>{signedIn && <a className="admin-board-link" href="/">Ghé thăm trạm tri ân ↗</a>}</div>
+   <div className="admin-heading"><div><span className="admin-eyebrow">GỬI NGƯỜI GIEO CHỮ · 20/11</span><h1>{signedIn ? 'Duyệt lời tri ân' : 'Gìn giữ những lời yêu thương.'}</h1><p>{signedIn ? 'Một chút quan tâm, để mỗi lời nhắn trên bảng chung đều thật đẹp.' : 'Chăm sóc và duyệt những lời nhắn gửi đến thầy cô.'}</p></div>{signedIn && <a className="admin-board-link" href="/">Ghé thăm trạm tri ân ↗</a>}</div>
    {error && <div className="admin-feedback admin-feedback-error" role="alert"><span>{error}</span><button onClick={() => setError('')} aria-label="Đóng thông báo lỗi">×</button></div>}
    {notice && signedIn && <div className="admin-feedback admin-feedback-success" role="status"><span>✓ {notice}</span><button onClick={() => setNotice('')} aria-label="Đóng thông báo">×</button></div>}
    {!checkedSession ? <div className="admin-empty" role="status"><span className="admin-loader"/>Đang kiểm tra phiên đăng nhập…</div> : !signedIn ? <div className="admin-login-layout">
     <form className="admin-login" onSubmit={login} aria-busy={busy === 'login'}>
-     <span className="admin-login-icon" aria-hidden="true">✳</span><h2>Chào bạn, quản trị viên</h2><p>Đăng nhập để bắt đầu duyệt lời tri ân.</p>
+     <h2>Chào bạn, quản trị viên</h2><p>Đăng nhập để bắt đầu duyệt lời tri ân.</p>
      <label htmlFor="admin-password">Mật khẩu quản trị</label><div className="admin-password"><input id="admin-password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="Nhập mật khẩu của bạn" required maxLength={200} value={password} disabled={!!busy} onChange={e => setPassword(e.target.value)}/><button type="button" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)}>{showPassword ? 'Ẩn' : 'Hiện'}</button></div>
      <button className="admin-button admin-primary admin-login-submit" disabled={locked}>{busy === 'login' ? 'Đang đăng nhập…' : 'Vào không gian quản trị →'}</button>
      <small>Chỉ dành cho quản trị viên.</small>

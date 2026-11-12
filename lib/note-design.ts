@@ -19,13 +19,13 @@ export const noteShapes={
 export function noteShape(theme:string){return noteShapes[theme as keyof typeof noteShapes]||noteShapes.meadow}
 // Use the same proportional sticker size and writing margins on screen and in exports.
 export const noteStickerSize=14;
-export function noteContentInsets(theme:string,stickerCount:number){
+export function noteContentInsets(theme:string,stickerCount:number,stickerClearance=2){
  const shape=noteShape(theme);
  let left:number=shape.side,right:number=shape.side;
  for(const sticker of shape.stickers.slice(0,Math.max(0,Math.min(2,stickerCount)))){
   const angle=sticker.rotation*Math.PI/180;
   const radius=noteStickerSize/2*(Math.abs(Math.cos(angle))+Math.abs(Math.sin(angle)));
-  const gap=2;
+  const gap=stickerClearance;
   if(sticker.y+radius+gap<=shape.top||sticker.y-radius-gap>=100-shape.bottom)continue;
   if(sticker.x<50)left=Math.max(left,sticker.x+radius+gap);
   else right=Math.max(right,100-sticker.x+radius+gap);

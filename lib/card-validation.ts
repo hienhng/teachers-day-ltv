@@ -3,7 +3,7 @@ export const themes=['meadow','heart','blossom','night'] as const;
 export const decorationOptions=['ribbon','butterflies','hearts','sparkles','fireflies','petals','bees','cranes','music','math','physics','english','history','geography','chemistry','books','pencil','graduation','literature','pe','it','biology','arts'] as const;
 export type Decoration=typeof decorationOptions[number];
 export type Card={id?:string;flower:string;theme:string;recipient:string;message:string;sender:string;anonymous:boolean;shareSender:boolean;decorations?:Decoration[];gardenX?:number|null;gardenY?:number|null};
-export const messageCharacterLimit=300;
+export const messageCharacterLimit=150;
 export function validateCard(v:any):Card|null{
  if(!v||!flowers.includes(v.flower)||!themes.includes(v.theme)||typeof v.recipient!=='string'||typeof v.message!=='string'||typeof v.sender!=='string'||typeof v.anonymous!=='boolean'||typeof v.shareSender!=='boolean')return null;
  const recipient=v.recipient.trim(),message=v.message.trim(),sender=v.anonymous?'':v.sender.trim();

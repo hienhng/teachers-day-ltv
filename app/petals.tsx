@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useLayoutEffect,useRef,useState} from 'react';
 import {useRouter} from 'next/navigation';
+import Link from 'next/link';
 import {createLetterQR} from '../lib/letter-qr';
 import {NoteIcon,StickyNote} from './sticky-note';
 import {ScatteredNotes} from './scattered-notes';
@@ -8,6 +9,7 @@ import {Homepage} from './homepage';
 import './community-board.css';
 import {SiteNavigation} from './site-navigation';
 import {ReceivedLetter} from './received-letter';
+import {BoardNoteActions} from './board-note-actions';
 import {MakerPanel} from './maker-panel';
 import {DoodleArt} from './doodle-art';
 import {type Decoration,type Card} from '../lib/card-validation';
@@ -37,6 +39,8 @@ function CardPreview({card,id,fitToViewport=false,fitToFrame=!fitToViewport,orig
    // Leave room around the paper for its tape, stickers and shadow.
    const scale=Math.min(1,frame.clientWidth/(note.offsetWidth*1.2),frame.clientHeight/(note.offsetHeight*1.2));
    frame.style.setProperty(fitToFrame?'--note-preview-scale':'--note-dialog-scale',String(scale));
+   // Keep the action dock just below the paper, including on tall phone screens.
+   if(fitToViewport)frame.closest('dialog')?.style.setProperty('--note-dialog-action-lift',`${Math.max(0,(frame.clientHeight-note.offsetHeight*scale)/2-14)}px`);
    if(opening&&scale!==previousScale)opening.cancel();
    previousScale=scale;
    if(opened||!note.closest('dialog')?.open)return;
@@ -54,11 +58,12 @@ function CardPreview({card,id,fitToViewport=false,fitToFrame=!fitToViewport,orig
  },[fitToViewport,fitToFrame,origin]);
  return <div ref={viewport} className={`note-viewport${fitToFrame?' note-viewport-fitted':''}`}><StickyNote card={card} id={id}/></div>;
 }
-export default function Petals({initialView='home'}:{initialView?:'home'|'garden'}){
+export default function Petals({initialView='home'}:{initialView?:'home'|'garden'|'maker'}){
  const router=useRouter();
  const[view,setView]=useState<string>(initialView),[step,setStep]=useState(1),[card,setCard]=useState<Card>(blank),[saved,setSaved]=useState<Card|null>(null),[busy,setBusy]=useState(false),[bloom,setBloom]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[garden,setGarden]=useState<Card[]>([]),[gardenPage,setGardenPage]=useState(0),[gardenPageSize,setGardenPageSize]=useState(20),[gardenHasMore,setGardenHasMore]=useState(false),[loading,setLoading]=useState(false),[selected,setSelected]=useState<Card|null>(null),[qr,setQr]=useState(''),[png,setPng]=useState('');
  const[moderationStatus,setModerationStatus]=useState<ModerationStatus>('pending');
  const[deadlineRejected,setDeadlineRejected]=useState(false);
+ const[boardTarget,setBoardTarget]=useState<string>();
  const dialog=useRef<HTMLDialogElement>(null),preview=useRef<HTMLDivElement>(null),resultHeading=useRef<HTMLHeadingElement>(null),audio=useRef<AudioContext|null>(null);
  const selectedOrigin=useRef<NoteOpenOrigin|null>(null);
  const selectedSource=useRef<HTMLButtonElement|null>(null),returning=useRef<Animation|null>(null);
@@ -85,19 +90,37 @@ export default function Petals({initialView='home'}:{initialView?:'home'|'garden
  }
  function ping(){try{audio.current??=new AudioContext();const a=audio.current;if(a.state==='suspended')void a.resume().catch(()=>{});const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.setValueAtTime(660,a.currentTime);o.frequency.exponentialRampToValueAtTime(880,a.currentTime+.12);g.gain.setValueAtTime(.035,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.2);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.2)}catch{}}
  function clearMakerDraft(){
-  setCard(blank);setSaved(null);setStep(1);setModerationStatus('pending');
+  setCard(blank);setSaved(null);setStep(1);setModerationStatus('pending');setDeadlineRejected(false);
   setQr('');setPng('');setBloom(false);
  }
- function navigate(v:string){if(view==='maker'&&v!=='maker')clearMakerDraft();ping();if(v==='garden'){router.push('/board');return}if(initialView==='garden'){router.push('/');return}if(location.search)history.replaceState(null,'','/');setView(v);setError('');setNotice('');window.scrollTo({top:0,behavior:'instant'});}
+ function navigate(v:string){if(view==='maker'&&v!=='maker')clearMakerDraft();ping();if(v==='garden'){router.push('/board');return}if(v==='maker'&&initialView!=='maker'){router.push('/create');return}if(v==='home'&&initialView!=='home'){router.push('/');return}if(location.search)history.replaceState(null,'',location.pathname);setView(v);setError('');setNotice('');window.scrollTo({top:0,behavior:'instant'});}
  function go(v:string){navigate(v)}
- function showEvent(){ping();if(view!=='home'){navigate('home');window.setTimeout(()=>document.getElementById('event')?.scrollIntoView({behavior:'smooth',block:'start'}),0);return}document.getElementById('event')?.scrollIntoView({behavior:'smooth',block:'start'});}
+ function showEvent(){ping();if(initialView!=='home'){router.push('/#event');return}if(view!=='home'){navigate('home');window.setTimeout(()=>document.getElementById('event')?.scrollIntoView({behavior:'smooth',block:'start'}),0);return}document.getElementById('event')?.scrollIntoView({behavior:'smooth',block:'start'});}
  function create(){clearMakerDraft();navigate('maker')}
  useEffect(()=>{if(initialView!=='home')return;const id=new URLSearchParams(location.search).get('card');if(id){setView('received');setLoading(true);fetch(`/api/cards?id=${encodeURIComponent(id)}`).then(async r=>{const d=await r.json() as {error:string;card:Card;cards:Card[];hasMore:boolean;editToken:string};if(!r.ok)throw Error(d.error);setSaved(d.card)}).catch(e=>setError(e.message)).finally(()=>setLoading(false))}},[initialView]);
  useEffect(()=>{if(!notice)return;const t=setTimeout(()=>setNotice(''),4500);return()=>clearTimeout(t)},[notice]);
  useEffect(()=>{if(selected)dialog.current?.showModal();else dialog.current?.close()},[selected]);
  useEffect(()=>{if(step>=5&&!bloom)resultHeading.current?.focus({preventScroll:true})},[step,bloom]);
  useEffect(()=>{const media=window.matchMedia('(max-width: 700px)');const updatePageSize=()=>{setGardenPageSize(media.matches?10:20);setGardenPage(0)};updatePageSize();media.addEventListener('change',updatePageSize);return()=>media.removeEventListener('change',updatePageSize)},[]);
- useEffect(()=>{if(view!=='garden')return;const controller=new AbortController();setLoading(true);setError('');fetch(`/api/cards?limit=${gardenPageSize}&offset=${gardenPage*gardenPageSize}`,{signal:controller.signal}).then(async r=>{const d=await r.json() as {error:string;cards:Card[];hasMore:boolean};if(!r.ok)throw Error(d.error);setGarden(d.cards);setGardenHasMore(d.hasMore)}).catch(e=>{if(!controller.signal.aborted)setError((e as Error).message)}).finally(()=>{if(!controller.signal.aborted)setLoading(false)});return()=>controller.abort()},[view,gardenPage,gardenPageSize]);
+ useEffect(()=>{
+  if(view!=='garden')return;
+  const controller=new AbortController(),target=new URLSearchParams(location.search).get('note');
+  setLoading(true);setError('');
+  const query=new URLSearchParams({limit:String(gardenPageSize),offset:String(gardenPage*gardenPageSize)});
+  if(target)query.set('note',target);
+  fetch(`/api/cards?${query}`,{signal:controller.signal}).then(async r=>{
+   const d=await r.json() as {error:string;cards:Card[];hasMore:boolean;page:number};
+   if(controller.signal.aborted)return;
+   if(!r.ok)throw Error(d.error);
+   setGarden(d.cards);setGardenHasMore(d.hasMore);setGardenPage(d.page);
+   setBoardTarget(target&&d.cards.some(note=>note.id===target)?target:undefined);
+  }).catch(e=>{if(!controller.signal.aborted)setError((e as Error).message)}).finally(()=>{if(!controller.signal.aborted)setLoading(false)});
+  return()=>controller.abort();
+ },[view,gardenPage,gardenPageSize]);
+ function changeBoardPage(page:number){
+  const url=new URL(location.href);url.searchParams.delete('note');history.replaceState(null,'',url);
+  setBoardTarget(undefined);setGardenPage(page);
+ }
  const update=(key:keyof Card,value:string|boolean|Decoration[])=>setCard(c=>({...c,[key]:value}));
  function changeStep(nextStep:number){setError('');setStep(nextStep);window.scrollTo({top:0,behavior:'instant'});}
  async function makeBloom(e:React.FormEvent){e.preventDefault();setBusy(true);setError('');try{const r=await fetch('/api/cards',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...card,shareSender:!card.anonymous})}),d=await r.json() as {error:string;card:Card;cards:Card[];hasMore:boolean;editToken:string;moderationStatus:ModerationStatus;moderationReason?:string};if(!r.ok)throw Error(d.error||'Không thể lưu thiệp. Vui lòng thử lại.');setSaved(d.card);setModerationStatus(d.moderationStatus||'pending');setDeadlineRejected(d.moderationReason==='submission_deadline');changeStep(5);ping()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
@@ -125,7 +148,7 @@ export default function Petals({initialView='home'}:{initialView?:'home'|'garden
     <h2 id="garden-step-title" ref={resultHeading} tabIndex={-1}>Cảm ơn bạn đã gửi yêu thương!</h2>
     <p className="success" role="status">{deadlineRejected?'Thời hạn nhận lời tri ân đã kết thúc. Lời nhắn của bạn không được đăng lên bảng chung.':moderationStatus==='approved'?'Lời nhắn đã được duyệt và hiển thị trên bảng tri ân.':moderationStatus==='rejected'?'Lời nhắn chưa được chấp nhận lên bảng tri ân. Bạn có thể viết lại lời nhắn phù hợp.':'Lời nhắn đã được gửi và đang chờ LTPC xem xét.'}</p>
     <p>{deadlineRejected?'Cảm ơn bạn đã quan tâm và gửi yêu thương đến thầy cô.':moderationStatus==='rejected'?'Cảm ơn bạn đã cùng giữ bảng tri ân thân thiện với mọi người.':'Chỉ lời nhắn đã được duyệt mới hiển thị công khai trên bảng tri ân.'}</p>
-    <div className="form-actions">{deadlineRejected?<button type="button" className="pixel-button primary" onClick={()=>go('home')}>Về trạm tri ân →</button>:canShare?<button type="button" className="pixel-button primary" onClick={finishGarden}>Tiếp tục chia sẻ tấm thiệp →</button>:<button type="button" className="pixel-button primary" onClick={()=>{setCard(c=>({...c,message:''}));setSaved(null);setQr('');setPng('');setModerationStatus('pending');changeStep(1)}}>Viết lại lời nhắn →</button>}</div>
+    <div className="form-actions">{moderationStatus==='approved'&&saved.id&&<Link className="pixel-button primary" href={`/board?note=${encodeURIComponent(saved.id)}`}>Xem lời nhắn của bạn trên bảng →</Link>}{deadlineRejected?<button type="button" className="pixel-button primary" onClick={()=>go('home')}>Về trạm tri ân →</button>:canShare?<button type="button" className={`pixel-button ${moderationStatus==='approved'?'secondary':'primary'}`} onClick={finishGarden}>Tiếp tục chia sẻ tấm thiệp →</button>:<button type="button" className="pixel-button primary" onClick={()=>{setCard(c=>({...c,message:''}));setSaved(null);setQr('');setPng('');setModerationStatus('pending');changeStep(1)}}>Viết lại lời nhắn →</button>}</div>
    </section>:<section className="panel" aria-labelledby="send-step-title">
     <h2 id="send-step-title" ref={resultHeading} tabIndex={-1}>Mang lời cảm ơn đến thầy cô.</h2><p>Gửi đường dẫn, chia sẻ mã QR, hoặc lưu lại tấm thiệp của bạn.</p>
     <div className="share-actions"><button className="pixel-button primary" onClick={copy}>Sao chép đường dẫn ↗</button><button className="pixel-button secondary" onClick={getQR}>Tải mã QR</button><button className="pixel-button secondary" disabled={busy} onClick={exportPNG}>Tải thiệp PNG ↓</button></div><label className="share-url">Đường dẫn thiệp<input readOnly value={shareUrl()} onFocus={e=>e.target.select()}/></label>
@@ -162,16 +185,16 @@ export default function Petals({initialView='home'}:{initialView?:'home'|'garden
    <div className="board-content" role="region" aria-label="Những lời nhắn trên bảng" tabIndex={0}>
       {!garden.length&&!loading&&!error&&<p className="board-empty-message">Chiếc bảng đang đợi lời cảm ơn đầu tiên.</p>}
       {loading&&<p className="board-loading" role="status">Đang mở bảng tri ân…</p>}
-      {error&&<p className="board-unavailable" role="status">Chưa thể tải lời nhắn. Bạn có thể thử mở lại bảng sau.</p>}
-    <ScatteredNotes cards={garden} onSelect={openBoardNote} openedCardId={selected?.id} paused={loading||Boolean(error)} showGreeting/>
+      {error&&<p className="board-unavailable" role="status">{error} <a className="board-link" href="/board">Xem bảng tri ân →</a></p>}
+    <ScatteredNotes cards={garden} onSelect={openBoardNote} openedCardId={selected?.id} targetCardId={boardTarget} paused={loading||Boolean(error)} showGreeting/>
    </div>
    <div className="board-footer">
     <button className="board-exit" onClick={()=>go('home')} aria-label="Trở về trang chủ" title="Trở về trang chủ">←</button>
-    {(gardenPage>0||gardenHasMore)&&<nav className="board-pagination" aria-label="Các trang bảng tri ân"><button className="board-link" disabled={gardenPage<=0||loading} onClick={()=>setGardenPage(page=>Math.max(0,page-1))}>← Trang trước</button><span aria-live="polite">Trang {gardenPage+1}</span><button className="board-link" disabled={!gardenHasMore||loading} onClick={()=>setGardenPage(page=>page+1)}>Trang tiếp →</button></nav>}
+    {(gardenPage>0||gardenHasMore)&&<nav className="board-pagination" aria-label="Các trang bảng tri ân"><button className="board-link" disabled={gardenPage<=0||loading} onClick={()=>changeBoardPage(Math.max(0,gardenPage-1))}>← Trang trước</button><span aria-live="polite">Trang {gardenPage+1}</span><button className="board-link" disabled={!gardenHasMore||loading} onClick={()=>changeBoardPage(gardenPage+1)}>Trang tiếp →</button></nav>}
     <p className="privacy-note board-privacy">Chỉ hiển thị lời nhắn đã được LTPC duyệt.</p>
    </div>
    <div className="community-tray" aria-hidden="true"><i/><i/><i/><b/></div>
   </section>
  </main>:<main className="received page-wrap"><div className="section-heading"><span className="eyebrow">MỘT LỜI TRI ÂN DÀNH RIÊNG CHO THẦY CÔ</span><h1>Một tờ note, từ một tấm lòng.</h1></div>{loading?<p role="status">Đang mở tấm thiệp…</p>:saved&&<ReceivedLetter key={saved.id} recipient={saved.recipient} note={<div ref={preview}><CardPreview card={saved}/></div>} actions={<><button className="pixel-button secondary" disabled={busy} onClick={exportPNG}>Lưu ảnh tấm thiệp</button>{png&&<a href={png} download="tram-tri-an-20-11.png" className="export-preview"><img src={png} alt="Ảnh thiệp đã xuất"/><span>Lưu ảnh thiệp ↓</span></a>}<button className="text-link" onClick={create}>Viết một lời tri ân khác →</button></>}/>}</main>}
- {error&&<div className="error" role="alert">{error}<button aria-label="Đóng thông báo" onClick={()=>setError('')}>×</button></div>}{notice&&<div className="toast" role="status">✎ {notice}</div>}<dialog ref={dialog} aria-label="Lời nhắn trên bảng tri ân" className="card-dialog" data-closing={closing||undefined} onCancel={event=>{event.preventDefault();closeBoardNote()}} onClick={e=>{if(e.target===dialog.current)closeBoardNote()}}><button className="close-modal" onClick={closeBoardNote} aria-label="Đóng lời chúc">×</button>{selected&&<CardPreview fitToViewport origin={selectedOrigin.current} card={{...selected,sender:selected.sender||'Một người học trò'}}/>}</dialog></>
+ {error&&<div className="error" role="alert">{error}<button aria-label="Đóng thông báo" onClick={()=>setError('')}>×</button></div>}{notice&&<div className="toast" role="status">✎ {notice}</div>}<dialog ref={dialog} aria-label="Lời nhắn trên bảng tri ân" className="card-dialog" data-closing={closing||undefined} onCancel={event=>{event.preventDefault();closeBoardNote()}} onClick={e=>{if(e.target===dialog.current)closeBoardNote()}}><button className="close-modal" onClick={closeBoardNote} aria-label="Đóng lời chúc">×</button>{selected&&<><CardPreview fitToViewport origin={selectedOrigin.current} card={{...selected,sender:selected.sender||'Một người gửi yêu thương'}}/><BoardNoteActions key={selected.id} card={selected}/></>}</dialog></>
 }

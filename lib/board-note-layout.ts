@@ -1,6 +1,17 @@
 export type BoardNotePosition = {left:number;top:number;rotation:number};
 export type BoardReservedArea = {x:number;y:number;width:number;height:number};
 
+// Give each note its own gentle tilt, independent of shape, size and placement.
+// Keep it stable when the note moves to another panel or the viewport resizes.
+export function boardNoteRotation(id:string){
+ let seed=2166136261;
+ for(const char of `rotation:${id}`)seed=Math.imul(seed^char.charCodeAt(0),16777619)>>>0;
+ seed=(seed+0x6d2b79f5)>>>0;
+ let value=Math.imul(seed^(seed>>>15),1|seed);
+ value^=value+Math.imul(value^(value>>>7),61|value);
+ return (((value^(value>>>14))>>>0)/4294967296-.5)*10;
+}
+
 export function boardPanelCapacity(width:number,height:number,greeting?:BoardReservedArea){
  const reserved=greeting??{x:width>=760?(width-Math.min(360,width*.32))/2:16,y:(height-(width>=760?240:120))/2,width:width>=760?Math.min(360,width*.32):width-32,height:width>=760?240:120};
  for(let count=5;count>=3;count--)if(panelMetrics(count,width,height,reserved).maxSize>=readableBoardNoteSize(width))return count;
@@ -12,6 +23,11 @@ export function readableBoardNoteSize(width:number){return width>=760?200:160}
 // Follow the visible board in both orientations rather than a fixed pixel cap.
 export function boardNoteViewportSize(width:number,height:number){
  return Math.max(1,Math.min(width*(width>=760?.24:.6),height*.42));
+}
+
+// Use the busiest panel's available space for one paper size across the board.
+export function boardPanelNoteSize(count:number,width:number,height:number,greeting?:BoardReservedArea){
+ return Math.min(boardNoteViewportSize(width,height),panelMetrics(count,width,height,greeting).maxSize);
 }
 
 // Keep at least three notes together, merging short tails into balanced panels.
@@ -79,7 +95,7 @@ function panelMetrics(count:number,width:number,height:number,greeting?:BoardRes
  return {zones,columns,cellWidth,cellHeight,maxSize};
 }
 
-export function layoutBoardPanel(ids:string[],width:number,height:number,noteSizes:number[]=[],greeting?:BoardReservedArea,viewportSize=boardNoteViewportSize(width,height)){
+export function layoutBoardPanel(ids:string[],width:number,height:number,noteSizes:number[]=[],greeting?:BoardReservedArea,viewportSize=boardNoteViewportSize(width,height),proportional=false):{size:number;sizes:number[];width:number;height:number;positions:BoardNotePosition[]}{
  const padding=8,gap=12,sideGreeting=Boolean(greeting&&width>=760);
  const {zones,columns,cellWidth,cellHeight,maxSize}=panelMetrics(ids.length,width,height,greeting);
  const size=Math.min(viewportSize,maxSize);
@@ -92,14 +108,16 @@ export function layoutBoardPanel(ids:string[],width:number,height:number,noteSiz
   value^=value+Math.imul(value^(value>>>7),61|value);
   return ((value^(value>>>14))>>>0)/4294967296;
  };
- const sizes=ids.map((_,index)=>Math.max(minimum,size*(.92+random()*.08),noteSizes[index]||0));
+ const sizes=ids.map((_,index)=>proportional?Math.max(1,noteSizes[index]||size):Math.max(minimum,size*(.92+random()*.08),noteSizes[index]||0));
+ // Place the hardest-to-fit notes first, preserving their original render order.
+ const placementOrder=sizes.map((_,index)=>index).sort((a,b)=>sizes[b]-sizes[a]);
  // A roomy fallback guarantees every note fits even on a very small screen.
  const fallback=ids.map((_,index)=>{
   const x=random(),y=random();
   const zone=zones[index%zones.length],slot=Math.floor(index/zones.length);
   const column=slot%columns,row=Math.floor(slot/columns),noteSize=sizes[index],footprint=noteSize*1.4+12;
   const left=zone.x+column*(cellWidth+gap),top=zone.y+row*(cellHeight+gap);
-  return {left:left+(cellWidth-footprint)*x+(footprint-noteSize)/2,top:top+(cellHeight-footprint)*y+(footprint-noteSize)/2,rotation:(random()-.5)*22};
+  return {left:left+(cellWidth-footprint)*x+(footprint-noteSize)/2,top:top+(cellHeight-footprint)*y+(footprint-noteSize)/2,rotation:boardNoteRotation(ids[index])};
  });
  // Keep the desktop title's entire vertical lane clear during scrolling too.
  const reserved=greeting?(sideGreeting?{x:greeting.x,y:0,width:greeting.width,height}:greeting):undefined;
@@ -107,21 +125,28 @@ export function layoutBoardPanel(ids:string[],width:number,height:number,noteSiz
  // Retry the whole arrangement so an unlucky early placement never forces overlap.
  for(let attempt=0;attempt<12;attempt++){
   const boxes:BoardReservedArea[]=reserved?[reserved]:[],positions:BoardNotePosition[]=[];
-  for(const noteSize of sizes){
+  let placedCount=0;
+  for(const index of placementOrder){
+   const noteSize=sizes[index];
    const footprint=noteSize*1.4+12;
+   if(footprint>width-padding*2||footprint>height-padding*2)break;
    let placed=false;
    for(let candidate=0;candidate<150;candidate++){
     const box={x:padding+random()*Math.max(0,width-padding*2-footprint),y:padding+random()*Math.max(0,height-padding*2-footprint),width:footprint,height:footprint};
     if(!boxes.every(other=>separate(box,other)))continue;
     boxes.push(box);
-    positions.push({left:box.x+(footprint-noteSize)/2,top:box.y+(footprint-noteSize)/2,rotation:(random()-.5)*22});
+    positions[index]={left:box.x+(footprint-noteSize)/2,top:box.y+(footprint-noteSize)/2,rotation:boardNoteRotation(ids[index])};
+    placedCount++;
     placed=true;break;
    }
    if(!placed)break;
   }
-  if(positions.length===ids.length)return {size,sizes,width,height,positions};
+  if(placedCount===ids.length)return {size,sizes,width,height,positions};
  }
  if(sizes.every(noteSize=>noteSize<=maxSize))return {size,sizes,width,height,positions:fallback};
+ // Share any necessary reduction across all notes. Capping each note separately
+ // wastes space on short messages and makes detailed messages harder to read.
+ if(proportional)return layoutBoardPanel(ids,width,height,sizes.map(noteSize=>noteSize*.94),greeting,viewportSize,true);
  // A note that genuinely exceeds the available space still uses the scattered
  // placement algorithm. Ordinary content growth never replaces it with columns.
  const largest=Math.max(...sizes),footprint=largest*1.4+12;
@@ -156,7 +181,7 @@ export function scatterBoardNotes(ids:string[],width:number,minHeight:number,not
  const boxes:BoardReservedArea[]=[...reservedAreas];
  for(let index=0;index<ids.length;index++){
   const footprint=footprints[index],noteSize=sizes[index];
-  const rotation=(random()-.5)*12;
+  const rotation=boardNoteRotation(ids[index]);
   let box:{x:number;y:number}|undefined;
   for(let attempt=0;attempt<250;attempt++){
    const candidate={x:padding+random()*Math.max(0,boardWidth-padding*2-footprint),y:padding+random()*Math.max(0,height-padding*2-footprint)};

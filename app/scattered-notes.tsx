@@ -1,14 +1,15 @@
 'use client';
 import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
 import type {Card} from '../lib/card-validation';
-import {boardPanelCapacity,layoutBoardPanel,sectionBoardNotes,type BoardReservedArea} from '../lib/board-note-layout';
+import {noteShape} from '../lib/note-design';
+import {boardPanelNoteSize,boardPanelCapacity,layoutBoardPanel,sectionBoardNotes,type BoardReservedArea} from '../lib/board-note-layout';
 import {startBoardPanelScroll} from '../lib/board-panel-scroll';
 import {StickyNote} from './sticky-note';
 import './scattered-notes.css';
 
-type ScatteredNotesProps={cards:Card[];onSelect:(card:Card,source:HTMLButtonElement)=>void;showGreeting?:boolean;openedCardId?:string;paused?:boolean};
+type ScatteredNotesProps={cards:Card[];onSelect:(card:Card,source:HTMLButtonElement)=>void;showGreeting?:boolean;openedCardId?:string;targetCardId?:string;paused?:boolean};
 
-export function ScatteredNotes({cards,onSelect,showGreeting=false,openedCardId,paused=false}:ScatteredNotesProps){
+export function ScatteredNotes({cards,onSelect,showGreeting=false,openedCardId,targetCardId,paused=false}:ScatteredNotesProps){
  const container=useRef<HTMLDivElement>(null);
  const greeting=useRef<HTMLDivElement>(null);
  const [bounds,setBounds]=useState({width:0,height:0});
@@ -25,6 +26,7 @@ export function ScatteredNotes({cards,onSelect,showGreeting=false,openedCardId,p
  const reservedGreeting=useMemo(()=>showGreeting?{x:(bounds.width-greetingSize.width)/2-12,y:greetingTop-12,width:greetingSize.width+24,height:greetingSize.height+24}:undefined,[showGreeting,bounds.width,greetingSize,greetingTop]);
  const capacity=boardPanelCapacity(bounds.width,bounds.height,reservedGreeting);
  const panels=useMemo(()=>sectionBoardNotes(cards,capacity),[cards,capacity]);
+ const noteSize=boardPanelNoteSize(Math.max(1,...panels.map(panel=>panel.length)),bounds.width,bounds.height,reservedGreeting);
  useLayoutEffect(()=>{const viewport=container.current?.parentElement;if(viewport)viewport.scrollLeft=Math.max(0,(boardWidth-bounds.width)/2)},[boardWidth,bounds.width]);
  useLayoutEffect(()=>{
   const viewport=container.current?.parentElement;
@@ -49,6 +51,16 @@ export function ScatteredNotes({cards,onSelect,showGreeting=false,openedCardId,p
   return()=>observer.disconnect();
  },[showGreeting]);
  useLayoutEffect(()=>{const viewport=container.current?.parentElement;if(viewport)viewport.scrollTop=0},[pageKey,capacity]);
+ useLayoutEffect(()=>{
+  if(!targetCardId||paused||!bounds.width)return;
+  // Wait for the panels' measured paper sizes before revealing the original note.
+  const frame=requestAnimationFrame(()=>{
+   const note=container.current?.querySelector<HTMLButtonElement>('.board-note-panel:not([data-board-loop-clone]) [data-targeted="true"]');
+   note?.scrollIntoView({block:'center',inline:'center',behavior:'instant'});
+   note?.focus({preventScroll:true});
+  });
+  return()=>cancelAnimationFrame(frame);
+ },[targetCardId,paused,pageKey,capacity,boardWidth,bounds.width,bounds.height]);
  useEffect(()=>{
   const board=container.current,viewport=board?.parentElement;
   if(!board||!viewport||paused||openedCardId||panels.length<2)return;
@@ -57,38 +69,21 @@ export function ScatteredNotes({cards,onSelect,showGreeting=false,openedCardId,p
  const sections=panels.length?panels:showGreeting?[[]]:[];
  return <div ref={container} className="sectioned-notes" style={{'--board-viewport-width':`${bounds.width}px`} as CSSProperties}>
   {showGreeting&&<div className="board-fixed-title"><ChalkGreeting inscriptionRef={greeting} left={boardWidth/2} top={greetingTop}/></div>}
-  {sections.map((notes,index)=><ScatteredNotePanel key={notes[0]?.id||index} cards={notes} onSelect={onSelect} openedCardId={openedCardId} reservedGreeting={reservedGreeting} bounds={bounds} index={index} count={sections.length} reportWidth={reportWidth} boardWidth={boardWidth}/>)}
-  {panels.length>1&&<ScatteredNotePanel cards={panels[0]} onSelect={onSelect} reservedGreeting={reservedGreeting} bounds={bounds} index={0} count={sections.length} boardWidth={boardWidth} loopClone/>}
+  {sections.map((notes,index)=><ScatteredNotePanel key={notes[0]?.id||index} cards={notes} onSelect={onSelect} openedCardId={openedCardId} targetCardId={targetCardId} reservedGreeting={reservedGreeting} bounds={bounds} noteSize={noteSize} index={index} count={sections.length} reportWidth={reportWidth} boardWidth={boardWidth}/>)}
+  {panels.length>1&&<ScatteredNotePanel cards={panels[0]} onSelect={onSelect} reservedGreeting={reservedGreeting} bounds={bounds} noteSize={noteSize} index={0} count={sections.length} boardWidth={boardWidth} loopClone/>}
  </div>;
 }
 
-function ScatteredNotePanel({cards,onSelect,openedCardId,bounds,index,count,loopClone=false,reservedGreeting,reportWidth,boardWidth}:ScatteredNotesProps&{bounds:{width:number;height:number};index:number;count:number;loopClone?:boolean;reservedGreeting?:BoardReservedArea;reportWidth?:(key:string,width:number)=>void;boardWidth?:number}){
- const container=useRef<HTMLDivElement>(null);
- const [measuredSizes,setMeasuredSizes]=useState<number[]>([]);
- const baseLayout=useMemo(()=>layoutBoardPanel(cards.map(card=>card.id||card.recipient),bounds.width,bounds.height,[],reservedGreeting),[cards,bounds,reservedGreeting]);
- useLayoutEffect(()=>{
-  const notes=container.current?.querySelectorAll<HTMLElement>('.sticky-note');
-  if(!notes)return;
-  const measure=()=>{
-   const sizes=Array.from(notes,note=>note.offsetWidth);
-   setMeasuredSizes(previous=>previous.length===sizes.length&&previous.every((size,index)=>size===sizes[index])?previous:sizes);
-  };
-  measure();const observer=new ResizeObserver(measure);notes.forEach(note=>observer.observe(note));
-  return()=>observer.disconnect();
- },[cards,baseLayout]);
- const fittedSizes=useMemo(()=>{
-  // Scale complete messages into this panel's slots instead of splitting it.
-  return measuredSizes.map(size=>Math.min(size,baseLayout.size));
- },[measuredSizes,baseLayout]);
- const layout=useMemo(()=>layoutBoardPanel(cards.map(card=>card.id||card.recipient),bounds.width,bounds.height,fittedSizes,reservedGreeting),[cards,bounds,fittedSizes,reservedGreeting]);
+function ScatteredNotePanel({cards,onSelect,openedCardId,targetCardId,bounds,noteSize,index,count,loopClone=false,reservedGreeting,reportWidth,boardWidth}:ScatteredNotesProps&{bounds:{width:number;height:number};noteSize:number;index:number;count:number;loopClone?:boolean;reservedGreeting?:BoardReservedArea;reportWidth?:(key:string,width:number)=>void;boardWidth?:number}){
+ const layout=useMemo(()=>layoutBoardPanel(cards.map(card=>card.id||card.recipient),bounds.width,bounds.height,cards.map(card=>noteSize*(noteShape(card.theme).shape==='square'?.92:1)),reservedGreeting,undefined,true),[cards,bounds,noteSize,reservedGreeting]);
  useLayoutEffect(()=>{reportWidth?.(String(index),layout.width)},[reportWidth,index,layout.width]);
- return <div ref={container} className="board-notes scattered-notes board-note-panel" data-expanded={layout.height>bounds.height||layout.width>bounds.width||undefined} data-board-loop-clone={loopClone||undefined} inert={loopClone||undefined} aria-hidden={loopClone||undefined} role="group" aria-label={`Phần ${index+1} / ${count}`} style={{width:boardWidth||layout.width,height:layout.height,visibility:bounds.width?'visible':'hidden','--board-note-size':`${layout.size}px`,'--board-viewport-width':`${bounds.width}px`} as CSSProperties}>
+ return <div className="board-notes scattered-notes board-note-panel" data-expanded={layout.height>bounds.height||layout.width>bounds.width||undefined} data-board-loop-clone={loopClone||undefined} inert={loopClone||undefined} aria-hidden={loopClone||undefined} role="group" aria-label={`Phần ${index+1} / ${count}`} style={{width:boardWidth||layout.width,height:layout.height,visibility:bounds.width?'visible':'hidden','--board-note-size':`${noteSize}px`,'--board-viewport-width':`${bounds.width}px`} as CSSProperties}>
   {cards.map((card,index)=>{
    const originalPosition=layout.positions[index];
    const position={...originalPosition,left:originalPosition.left+((boardWidth||layout.width)-layout.width)/2};
    const size=layout.sizes[index];
-   const paperSize=measuredSizes[index]||baseLayout.sizes[index];
-   return <button className="board-note-button" data-opened={Boolean(openedCardId&&card.id===openedCardId)||undefined} key={card.id} onClick={event=>onSelect(card,event.currentTarget)} aria-label={`Đọc lời nhắn gửi ${card.recipient}`} style={{left:position.left,top:position.top,width:size,height:size,'--note-rotation':`${position.rotation}deg`} as CSSProperties}><span className="board-note-paper" style={{width:baseLayout.sizes[index],transform:`scale(${size/paperSize})`}}><StickyNote card={card} compact/></span></button>;
+   const targeted=Boolean(targetCardId&&card.id===targetCardId);
+   return <button className="board-note-button" data-targeted={targeted||undefined} data-opened={Boolean(openedCardId&&card.id===openedCardId)||undefined} key={card.id} onClick={event=>onSelect(card,event.currentTarget)} aria-label={`${targeted?'Lời nhắn của bạn. ':''}Đọc lời nhắn gửi ${card.recipient}`} style={{left:position.left,top:position.top,width:size,height:size,'--note-rotation':`${position.rotation}deg`} as CSSProperties}><span className="board-note-paper"><StickyNote card={card} compact/></span></button>;
   })}
  </div>;
 }

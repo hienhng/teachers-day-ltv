@@ -1,34 +1,46 @@
-export const boardPanelInterval=60_000;
+export const boardPanelInterval=5_000;
 
-/** Scroll through the panels, using a duplicate first panel for a seamless loop. */
+/** Keep the loop duplicate outside manual scrolling; reveal it only while wrapping. */
 export function startBoardPanelScroll(viewport:HTMLElement,board:HTMLElement){
  let timer:ReturnType<typeof setTimeout>,frame=0,animating=false;
+ let loop:{first:number;last:number;clone:number}|undefined;
  const cancelAnimation=()=>{
   cancelAnimationFrame(frame);frame=0;animating=false;
+  if(loop){
+   // An interrupted wrap must settle on a real, interactive panel.
+   const nearerFirst=Math.abs(viewport.scrollTop-loop.clone)<Math.abs(viewport.scrollTop-loop.last);
+   viewport.scrollTop=nearerFirst?loop.first:loop.last;
+   loop=undefined;
+  }
+  board.classList.remove('board-is-looping');
   viewport.classList.remove('board-is-advancing');
  };
  const schedule=()=>{clearTimeout(timer);timer=setTimeout(advance,boardPanelInterval)};
  const advance=()=>{
   if(document.hidden){schedule();return}
-  const panels=Array.from(board.querySelectorAll<HTMLElement>('.board-note-panel'));
+  const allPanels=Array.from(board.querySelectorAll<HTMLElement>('.board-note-panel'));
+  const clone=allPanels.find(panel=>panel.hasAttribute('data-board-loop-clone'));
+  const panels=allPanels.filter(panel=>panel!==clone);
   if(panels.length<2)return;
-  const hasLoopPanel=panels[panels.length-1].hasAttribute('data-board-loop-clone');
   const viewportTop=viewport.getBoundingClientRect().top+viewport.clientTop;
   const offsets=panels.map(panel=>panel.getBoundingClientRect().top-viewportTop+viewport.scrollTop);
-  let current=offsets.reduce((nearest,offset,index)=>Math.abs(offset-viewport.scrollTop)<Math.abs(offsets[nearest]-viewport.scrollTop)?index:nearest,0);
-  if(hasLoopPanel&&current===offsets.length-1){
-   viewport.scrollTop=offsets[0]+viewport.scrollTop-offsets[current];current=0;
-  }
+  const current=offsets.reduce((nearest,offset,index)=>Math.abs(offset-viewport.scrollTop)<Math.abs(offsets[nearest]-viewport.scrollTop)?index:nearest,0);
   const next=(current+1)%offsets.length;
-  const from=viewport.scrollTop,to=Math.min(offsets[next],viewport.scrollHeight-viewport.clientHeight);
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){viewport.scrollTop=offsets[next];schedule();return}
+  animating=true;viewport.classList.add('board-is-advancing');
+  let target=offsets[next];
+  if(clone&&next===0){
+   board.classList.add('board-is-looping');
+   target=clone.getBoundingClientRect().top-viewportTop+viewport.scrollTop;
+   loop={first:offsets[0],last:offsets[current],clone:target};
+  }
+  const from=viewport.scrollTop,to=Math.min(target,viewport.scrollHeight-viewport.clientHeight);
   const finish=()=>{
    // The duplicate and original look identical; reset while snapping is disabled.
-   if(hasLoopPanel&&next===offsets.length-1)viewport.scrollTop=offsets[0];
+   if(loop){viewport.scrollTop=loop.first;loop=undefined}
    cancelAnimation();schedule();
   };
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){viewport.scrollTop=to;finish();return}
   const start=performance.now();
-  animating=true;viewport.classList.add('board-is-advancing');
   const step=(now:number)=>{
    const progress=Math.min(1,(now-start)/1000);
    viewport.scrollTop=from+(to-from)*(1-(1-progress)**3);

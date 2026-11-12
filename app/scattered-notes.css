@@ -19,11 +19,13 @@
 }
 .scattered-notes .board-note-button .sticky-note {
  width: 100%;
+ max-width: none;
  margin: 0;
  transform-origin: var(--tape-x) var(--tape-y);
 }
 .scattered-notes .board-note-button:is(:hover, :focus-visible) { transform: rotate(var(--note-rotation)); }
 .scattered-notes .board-note-button[data-opened=true] { visibility: hidden; }
+.scattered-notes .board-note-button[data-targeted=true] { outline: 3px dashed #ffe09b; outline-offset: 8px; border-radius: 6px; }
 .scattered-notes .board-note-button[data-opened=true] .sticky-note { animation-play-state: paused; }
 .scattered-notes .note-paper-shape {
  filter: drop-shadow(1px 3px 1px #14291e35) drop-shadow(2px 5px 3px #14291e24);
@@ -207,18 +209,33 @@
 .board-fixed-title .greeting-doodle-star { stroke: #ffe184; }
 .board-fixed-title .greeting-doodle-sprout,
 .board-fixed-title .greeting-doodle-sparks { stroke: #b8efcf; }
-.scattered-notes .sticky-note.note-compact .note-writing { font-size: 15px; }
-.scattered-notes .sticky-note.note-compact h2 { font-size: 16px; line-height: 1.2; margin: 0 0 3px; white-space: normal; overflow: visible; }
+.scattered-notes .sticky-note.note-compact .note-content { align-items: stretch; }
+.scattered-notes .sticky-note.note-compact .note-writing {
+ display: flex;
+ flex-direction: column;
+ justify-content: space-between;
+ gap: .25em;
+ height: 100%;
+ font-size: 15px;
+}
+.scattered-notes .sticky-note.note-compact .note-writing > * { flex-shrink: 0; }
+.scattered-notes .sticky-note.note-compact h2 { font-size: 1.067em; line-height: 1.2; margin: 0; white-space: normal; overflow: visible; }
 .scattered-notes .sticky-note.note-compact .note-message {
  display: block;
  -webkit-line-clamp: unset;
  overflow: visible;
- font-size: 15px;
+ font-size: 1em;
  line-height: 1.45;
  margin: 0;
 }
-.scattered-notes .sticky-note.note-compact .note-signature { font-size: 15px; line-height: 1.45; margin: 6px 0 0; white-space: normal; overflow: visible; }
+.scattered-notes .sticky-note.note-compact .note-signature { font-size: .85em; line-height: 1.45; margin: 0; white-space: normal; overflow: visible; }
 .sectioned-notes { position: relative; }
+/* Keep the duplicate measurable without extending the manual scroll range. */
+.sectioned-notes:not(.board-is-looping) > [data-board-loop-clone] {
+ position: absolute;
+ top: 0;
+ visibility: hidden !important;
+}
 .classroom-community .board-content:has(.sectioned-notes),
 .board-note-scroll:has(.sectioned-notes) { overflow-x: auto; }
 @media (min-width: 760px) and (max-width: 1099px) {

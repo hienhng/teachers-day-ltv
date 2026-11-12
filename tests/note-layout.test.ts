@@ -1,8 +1,59 @@
 import {describe,it,expect} from 'vitest';
 import {noteShapes,noteContentInsets,noteStickerSize} from '../lib/note-design';
-import {boardNoteViewportSize,boardPanelCapacity,scatterBoardNotes,sectionBoardNotes,sectionMeasuredBoardNotes,layoutBoardPanel} from '../lib/board-note-layout';
+import {boardPanelNoteSize,boardNoteViewportSize,boardPanelCapacity,scatterBoardNotes,sectionBoardNotes,sectionMeasuredBoardNotes,layoutBoardPanel} from '../lib/board-note-layout';
 
 describe('sectioned board panels',()=>{
+ it('gives identical-shaped notes individual gentle tilts independent of sizing and panel order',()=>{
+  const ids=Array.from({length:12},(_,index)=>`same-shape-${index}`);
+  const original=layoutBoardPanel(ids,1440,900,ids.map(()=>200));
+  const rotations=new Map(ids.map((id,index)=>[id,original.positions[index].rotation]));
+  expect(new Set(rotations.values()).size).toBe(ids.length);
+  expect([...rotations.values()].some(angle=>angle<0)).toBe(true);
+  expect([...rotations.values()].some(angle=>angle>0)).toBe(true);
+  rotations.forEach(angle=>expect(Math.abs(angle)).toBeLessThanOrEqual(5));
+  const reordered=[...ids].reverse();
+  const resized=layoutBoardPanel(reordered,390,700,reordered.map((_,index)=>index%2?300:160),undefined,undefined,true);
+  reordered.forEach((id,index)=>expect(resized.positions[index].rotation).toBe(rotations.get(id)));
+  const scattered=scatterBoardNotes(ids,850,600);
+  ids.forEach((id,index)=>expect(scattered.positions[index].rotation).toBe(rotations.get(id)));
+ });
+ it('keeps paper sizes equal across panels with different numbers of notes',()=>{
+  for(const [width,height] of [[320,500],[390,700],[850,600],[1440,900],[2560,1440]]){
+   const greeting={x:width>=760?width*.35:16,y:height/2-60,width:width>=760?width*.3:width-32,height:120};
+   const size=boardPanelNoteSize(5,width,height,greeting);
+   for(const count of [1,3,4,5]){
+    const ids=Array.from({length:count},(_,index)=>`equal-${index}`);
+    const layout=layoutBoardPanel(ids,width,height,ids.map(()=>size),greeting,undefined,true);
+    expect(layout.sizes).toEqual(ids.map(()=>size));
+    expect(layout.width).toBe(width);expect(layout.height).toBe(height);
+   }
+  }
+ });
+ it('keeps detailed notes larger while fitting mixed sizes around the greeting',()=>{
+  const ids=['short','long','medium','tiny'],requested=[180,580,300,150];
+  for(const [width,height] of [[320,500],[390,700],[740,320],[850,600],[1440,720],[1920,900]]){
+   for(const withGreeting of [false,true]){
+    const greeting=withGreeting?{x:width>=760?width*.35:16,y:height/2-60,width:width>=760?width*.3:width-32,height:120}:undefined;
+    const layout=layoutBoardPanel(ids,width,height,requested,greeting,undefined,true);
+    expect(layout.width).toBe(width);expect(layout.height).toBe(height);
+    expect(layout.sizes[1]).toBeGreaterThan(layout.sizes[2]);
+    expect(layout.sizes[2]).toBeGreaterThan(layout.sizes[0]);
+    expect(layout.sizes[0]).toBeGreaterThan(layout.sizes[3]);
+    const scale=layout.sizes[1]/requested[1];
+    layout.sizes.forEach((size,index)=>expect(size/requested[index]).toBeCloseTo(scale));
+    const boxes=layout.positions.map(({left,top},index)=>{
+     const size=layout.sizes[index],footprint=size*1.4+12;
+     return {x:left-(footprint-size)/2,y:top-(footprint-size)/2,width:footprint,height:footprint};
+    });
+    boxes.forEach((box,index)=>{
+     expect(box.x).toBeGreaterThanOrEqual(0);expect(box.y).toBeGreaterThanOrEqual(0);
+     expect(box.x+box.width).toBeLessThanOrEqual(width);expect(box.y+box.height).toBeLessThanOrEqual(height);
+     for(const other of [...boxes.slice(index+1),...(greeting?[greeting]:[])])expect(box.x+box.width<=other.x||other.x+other.width<=box.x||box.y+box.height<=other.y||other.y+other.height<=box.y).toBe(true);
+    });
+    expect(layoutBoardPanel(ids,width,height,requested,greeting,undefined,true)).toEqual(layout);
+   }
+  }
+ });
  it('sizes notes with the visible screen width and height instead of a fixed cap',()=>{
   const phone=boardNoteViewportSize(390,700);
   const desktop=boardNoteViewportSize(1440,900);
@@ -224,8 +275,8 @@ describe('sticker clearance',()=>{
  for(const [theme,shape] of Object.entries(noteShapes)){
   it(`keeps rotated stickers outside the ${shape.shape} writing area at every note size`,()=>{
    for(const width of [120,240,480,984]){
-    for(const count of [1,2]){
-     const insets=noteContentInsets(theme,count);
+    for(const count of [1,2])for(const gap of [2,4]){
+     const insets=noteContentInsets(theme,count,gap);
      const content={left:width*insets.left/100,right:width*(1-insets.right/100),top:width*insets.top/100,bottom:width*(1-insets.bottom/100)};
      expect(content.right-content.left).toBeGreaterThan(width*.4);
      for(const sticker of shape.stickers.slice(0,count)){
@@ -236,7 +287,7 @@ describe('sticker clearance',()=>{
       }));
       const left=Math.min(...corners.map(point=>point.x)),right=Math.max(...corners.map(point=>point.x));
       const top=Math.min(...corners.map(point=>point.y)),bottom=Math.max(...corners.map(point=>point.y));
-      const clearance=width*.019;
+      const clearance=width*(gap-.1)/100;
       expect(right+clearance<=content.left||left-clearance>=content.right||bottom+clearance<=content.top||top-clearance>=content.bottom).toBe(true);
      }
     }

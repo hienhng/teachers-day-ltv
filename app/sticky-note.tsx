@@ -28,11 +28,31 @@ export function StickyNote({card,id,compact=false,onChange}:{card:Card;id?:strin
  useLayoutEffect(()=>{
   const note=paper.current,text=writing.current;
   if(!note||!text)return;
-  const insets=noteContentInsets(card.theme,(card.decorations||[]).length);
+  const insets=noteContentInsets(card.theme,(card.decorations||[]).length,compact?4:2);
   const contentFraction=1-(insets.top+insets.bottom)/100;
   let active=true;
   const fit=()=>{
    if(!active||!note.clientWidth)return;
+   if(compact&&!editable){
+    // Fit the actual writing box, which already reserves the shape and stickers.
+    note.style.minWidth='0px';
+    const content=text.parentElement!;
+    const measure=(size:number)=>{
+     text.style.fontSize=`${size}px`;
+     return text.scrollHeight<=content.clientHeight&&text.scrollWidth<=content.clientWidth;
+    };
+    let low=.1,high=Math.max(1,content.clientWidth,content.clientHeight);
+    if(!measure(high)){
+     for(let iteration=0;iteration<12;iteration++){
+      const middle=(low+high)/2;
+      if(measure(middle))low=middle;else high=middle;
+     }
+     measure(low);
+    }
+    // Leave a little breathing room below the maximum fitted text size.
+    measure(parseFloat(text.style.fontSize)*.92);
+    return;
+   }
    if(editable){
     // Use the larger paper first, then fit the writing uniformly on narrow screens.
     // The paper itself always keeps its original square view box.
@@ -69,14 +89,14 @@ export function StickyNote({card,id,compact=false,onChange}:{card:Card;id?:strin
    }
    note.style.minWidth=`${high}px`;
   };
-  fit();const observer=new ResizeObserver(fit);observer.observe(note);observer.observe(text);
+  fit();const observer=new ResizeObserver(fit);observer.observe(note);if(!compact)observer.observe(text);
   void document.fonts.ready.then(fit);
   return ()=>{active=false;observer.disconnect()};
  },[card.recipient,card.message,card.sender,card.anonymous,card.theme,card.decorations,compact,editable]);
  const stickers=(card.decorations||[]).slice(0,2);
  const design=noteDesign(card.flower);
  const shape=noteShape(card.theme);
- const insets=noteContentInsets(card.theme,stickers.length);
+ const insets=noteContentInsets(card.theme,stickers.length,compact?4:2);
  const style={
   '--note-paper':design.paper,'--note-edge':design.edge,'--note-ink':design.ink,
   '--shape-top':`${insets.top}%`,'--shape-bottom':`${insets.bottom}%`,'--shape-left':`${insets.left}%`,'--shape-right':`${insets.right}%`,
@@ -92,16 +112,16 @@ export function StickyNote({card,id,compact=false,onChange}:{card:Card;id?:strin
   <div className="note-content"><div className="note-writing" ref={writing}>
   {onChange?<>
    <label className="sr-only" htmlFor="letter-recipient">Gửi đến</label>
-   <textarea id="letter-recipient" className="letter-recipient" rows={1} required maxLength={60} value={card.recipient} onChange={event=>onChange('recipient',event.target.value)} placeholder="Thầy cô kính mến,"/>
+   <textarea id="letter-recipient" className="letter-recipient" rows={1} required maxLength={60} value={card.recipient} onChange={event=>onChange('recipient',event.target.value)} placeholder="Gửi thầy cô…"/>
    <label className="sr-only" htmlFor="letter-message">Lời tri ân của bạn</label>
-   <textarea id="letter-message" className="letter-message" rows={4} required minLength={5} maxLength={messageCharacterLimit} value={card.message} onChange={event=>onChange('message',event.target.value)} placeholder="Viết lời cảm ơn, một kỷ niệm hay điều bạn muốn gửi thầy cô…"/>
+   <textarea id="letter-message" className="letter-message" rows={4} required minLength={5} maxLength={messageCharacterLimit} value={card.message} onChange={event=>onChange('message',event.target.value)} placeholder="Một lời chúc 20/11, lời cảm ơn hay kỷ niệm cùng thầy cô…"/>
    <div className="letter-signature"><span>Với lòng biết ơn,</span>
-    {card.anonymous?<strong>Một người học trò</strong>:<><label className="sr-only" htmlFor="letter-sender">Người gửi</label><textarea id="letter-sender" rows={1} required maxLength={40} value={card.sender} onChange={event=>onChange('sender',event.target.value)} placeholder="Tên, biệt danh hoặc lớp của bạn"/></>}
+    {card.anonymous?<strong>Một người gửi yêu thương</strong>:<><label className="sr-only" htmlFor="letter-sender">Người gửi</label><textarea id="letter-sender" rows={1} required maxLength={40} value={card.sender} onChange={event=>onChange('sender',event.target.value)} placeholder="Tên hoặc biệt danh của bạn"/></>}
    </div>
   </>:<>
-  <h2>{card.recipient||'Thầy cô kính mến,'}</h2>
-  <p className="note-message">{card.message||'Có những lời cảm ơn chưa kịp nói. Hãy viết xuống đây, dành tặng người đã dìu dắt mình…'}</p>
-  <p className="note-signature">{!compact&&<>Với lòng biết ơn,<br/></>}<strong>{card.anonymous?'Một người học trò':card.sender||(card.id?'Một người học trò':'Tên của bạn')}</strong></p>
+  <h2>{card.recipient||'Gửi thầy cô…'}</h2>
+  <p className="note-message">{card.message||'Một lời chúc 20/11, lời cảm ơn hay kỷ niệm cùng thầy cô…'}</p>
+  <p className="note-signature">{!compact&&<>Với lòng biết ơn,<br/></>}<strong>{card.anonymous?'Một người gửi yêu thương':card.sender||(card.id?'Một người gửi yêu thương':'Tên của bạn')}</strong></p>
   </>}
   </div></div>
  </article>;

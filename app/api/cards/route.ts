@@ -26,7 +26,17 @@ export async function GET(req:Request){try{
  const query=new URL(req.url).searchParams;
  const gardenPageSize=query.has('limit')?Number(query.get('limit')):defaultGardenPageSize;
  if(gardenPageSize!==10&&gardenPageSize!==defaultGardenPageSize)throw new ApiError('Yêu cầu không hợp lệ.');
- const page=Math.floor(pageOffset(req)/gardenPageSize);
+ let page=Math.floor(pageOffset(req)/gardenPageSize);
+ const note=query.get('note');
+ if(note){
+  if(!isUuid(note))throw new ApiError('Không tìm thấy lời nhắn trên bảng.',404);
+  // Locate the note using the board's ordering and visibility rules, including UUID ties.
+  const position=await sql.query(`SELECT (SELECT COUNT(*) FROM cards newer
+   WHERE newer.status='approved' AND newer.public_opt_in AND (newer.created_at,newer.id)>(target.created_at,target.id))::int AS position
+   FROM cards target WHERE target.id=$1 AND target.status='approved' AND target.public_opt_in`,[note]);
+  if(!position.length)throw new ApiError('Không tìm thấy lời nhắn trên bảng.',404);
+  page=Math.floor(position[0].position/gardenPageSize);
+ }
  const offset=page*gardenPageSize;
  const rows=await sql.query(`SELECT id,flower,theme,decorations,recipient,message,
    CASE WHEN share_sender AND NOT anonymous THEN sender ELSE '' END AS sender,

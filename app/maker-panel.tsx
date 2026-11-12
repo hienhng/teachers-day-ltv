@@ -66,7 +66,7 @@ export function MakerPanel({card,busy,onChange,onSubmit,onSelect}:Props){
  </section>
  </aside>
  <section inert={mobile&&Boolean(activeTool)} className="letter-send" aria-label="Gửi lời nhắn">
-   <label className="checkbox"><input type="checkbox" checked={card.anonymous} onChange={event=>onChange('anonymous',event.target.checked)}/>Gửi ẩn danh, từ một người học trò</label>
+   <label className="checkbox"><input type="checkbox" checked={card.anonymous} onChange={event=>onChange('anonymous',event.target.checked)}/>Gửi ẩn danh</label>
    <p className="privacy-note" id="letter-privacy">Lời nhắn sẽ được đánh giá tự động; trường hợp cần thêm ngữ cảnh sẽ do LTPC duyệt. Lời chúc và tên người nhận sẽ hiển thị công khai trên bảng tri ân sau khi được duyệt. Tên người gửi cũng sẽ hiển thị, trừ khi bạn chọn gửi ẩn danh.</p>
    <button type="submit" disabled={busy} aria-describedby="letter-privacy" className="pixel-button primary">{busy?'Đang gửi lời nhắn…':'Gửi lời nhắn để duyệt →'}</button>
  </section>

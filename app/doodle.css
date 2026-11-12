@@ -243,7 +243,6 @@ footer { border-top: 2px dashed #343b3770; background: #f3eddf; color: #535d4b; 
 .sticky-note h2 { font-weight: 600; }
 .sticky-note .note-topline { border-bottom: 1px dashed #343b3770; }
 .sticky-note .note-bottom { border-top: 1px dashed #343b3770; }
-.sticky-note .note-signature strong { text-decoration: underline; text-decoration-style: wavy; text-decoration-color: #343b3750; text-underline-offset: 4px; }
 .sample-note { border-width: 2px; box-shadow: 4px 5px 0 #172e2a77; }
 .sample-note::after { content: '✧'; position: absolute; top: 8px; right: 10px; color: #554b38; font: 22px/1 var(--site-font); transform: rotate(12deg); }
 .sample-tape { border: 1px solid #75664c; background: repeating-linear-gradient(120deg,#f5e6be 0 6px,#e5d5af 6px 7px); box-shadow: none; }

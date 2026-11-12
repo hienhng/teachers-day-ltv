@@ -1,0 +1,87 @@
+/* A scrapbook spread: a circled date, pen strokes, and a note from the club. */
+.event-feature {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(260px, .8fr) minmax(0, 1.4fr);
+  max-width: 1120px;
+  width: calc(100% - 10%);
+  margin: 12px auto 80px;
+  gap: 48px;
+  padding: 44px;
+  border: 2px solid var(--doodle-ink);
+  border-radius: 9px 4px 18px 5px / 5px 16px 6px 12px;
+  background: #f3eddf;
+  scroll-margin-top: 35px;
+  box-shadow: 6px 7px 0 var(--doodle-ink);
+}
+.event-feature-date {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  align-self: center;
+  padding: 0 25px 24px;
+  border: 2px solid var(--doodle-ink);
+  border-radius: var(--doodle-edge);
+  background: #fffaf0;
+  box-shadow: 4px 5px 0 #b7bca4;
+  transform: rotate(-3deg);
+  color: #35533d;
+  text-align: center;
+}
+.event-feature-date-top { display: flex; justify-content: space-between; gap: 16px; padding: 29px 22px 18px; margin: 0 -25px; background: #f5c5b7; border-bottom: 2px solid var(--doodle-ink); font-size: 9px; letter-spacing: 2px; font-weight: 600; }
+.event-feature-date time { display: block; margin-top: auto; padding-top: 28px; }
+.event-feature-day { display: block; position: relative; width: fit-content; margin: 0 auto; font-size: clamp(100px, 10vw, 138px); line-height: 1; padding: .22em .2em .12em; letter-spacing: -.06em; font-weight: 600; color: var(--doodle-coral); }
+.event-feature-day > svg { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: #b64f3e; stroke-width: 1.8; stroke-linecap: round; opacity: .65; }
+.event-feature-month { display: block; margin-top: 10px; font-size: 12px; font-weight: 600; letter-spacing: 2px; }
+.event-feature-day-label { margin: 13px 0 28px; font-size: 8px; letter-spacing: 1.2px; line-height: 1.8; color: #5a6e50; }
+.event-feature-date-bottom { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: auto; padding-top: 20px; border-top: 2px dashed #a8ad96; }
+.event-feature-date-bottom > span { font-size: 32px; color: #8e6b43; }
+.event-feature-date-bottom p { margin: 0; text-align: left; color: #607255; font-size: 11px; line-height: 1.8; }
+.event-feature-story { position: relative; min-width: 0; padding: 8px 0; }
+.event-feature-eyebrow { margin: 0 0 22px; color: #926c45; font-size: 8px; font-weight: 600; letter-spacing: 1.5px; line-height: 1.9; }
+.event-feature-story h2 { margin: 0 0 22px; color: #304d3d; font-size: clamp(25px, 2.6vw, 36px); font-weight: 700; line-height: 1.6; letter-spacing: -1px; }
+.event-feature-story h2 em { position: relative; display: inline-block; font-style: normal; color: var(--doodle-coral); }
+.event-feature-story h2 em svg { position: absolute; left: 0; bottom: -7px; width: 100%; height: 13px; fill: none; stroke: #b64f3e; stroke-width: 2; stroke-linecap: round; }
+.event-feature-story > p:not(.event-feature-eyebrow) { margin: 0 0 17px; color: #697260; font-size: 11px; line-height: 2; }
+.event-feature-story > p.event-feature-lead { color: #4e604e; font-size: 12px; }
+.event-feature-story > p strong { font-weight: 600; color: #465d47; }
+.event-feature-action { display: inline-flex; justify-content: space-between; align-items: center; gap: 30px; padding: 11px 16px; margin-top: 6px; background: #f6d879; border: 2px solid var(--doodle-ink); border-radius: var(--doodle-edge); box-shadow: 3px 3px 0 var(--doodle-ink); color: #35533d; font-size: 12px; font-weight: 600; line-height: 1.8; min-height: 44px; transition: color .18s, border-color .18s; }
+.event-feature-action > span { font-size: 20px; }
+.event-feature-action:hover { color: #96643b; border-color: #96643b; }
+.event-feature-signature { display: flex; align-items: center; gap: 12px; border-top: 2px dashed #a8ad96; margin-top: 30px; padding-top: 22px; }
+.event-feature-plane { width: 44px; height: 44px; flex-shrink: 0; }
+.event-feature-signature strong, .event-feature-signature div > span { display: block; font-size: 9px; line-height: 1.8; }
+.event-feature-signature strong { color: #4d634a; font-weight: 600; }
+.event-feature-signature div > span { margin-top: 2px; color: #7e826f; }
+@media (max-width: 850px) {
+  .event-feature { grid-template-columns: minmax(200px, .8fr) minmax(0, 1.2fr); padding: 32px 25px; gap: 32px; }
+
+
+  .event-feature-story h2 { font-size: 26px; }
+}
+@media (max-width: 600px) {
+  .event-feature { grid-template-columns: 1fr; width: 86%; padding: 34px 22px 27px; gap: 33px; margin-bottom: 55px; }
+  .event-feature-date { width: 100%; max-width: 290px; justify-self: center; }
+  .event-feature-date time { padding-top: 20px; }
+  .event-feature-day { font-size: 116px; letter-spacing: -7px; }
+  .event-feature-month { margin-top: 5px; font-size: 11px; }
+  .event-feature-day-label { margin-bottom: 20px; }
+  .event-feature-date-bottom { padding-top: 15px; }
+  .event-feature-story { padding: 0; }
+  .event-feature-eyebrow { font-size: 7px; letter-spacing: 1.1px; margin-bottom: 18px; }
+  .event-feature-story h2 { font-size: clamp(23px, 6.2vw, 32px); letter-spacing: -.7px; }
+  .event-feature-action { gap: 18px; font-size: 11px; }
+  .event-feature-signature { margin-top: 25px; }
+}
+
+.event-feature-binding { position: absolute; display: flex; justify-content: space-around; top: -14px; left: 12%; right: 12%; }
+.event-feature-binding i { width: 10px; height: 29px; border: 2px solid var(--doodle-ink); border-radius: 7px 5px 6px 3px; background: #fffaf0; transform: rotate(4deg); }
+.event-feature-binding i:nth-child(2) { transform: rotate(-5deg); }
+.event-feature-sparkles { position: absolute; top: -30px; right: -29px; width: 50px; height: 50px; transform: rotate(13deg); }
+.event-feature-flower { position: absolute; bottom: -29px; left: -30px; width: 83px; height: 83px; transform: rotate(-17deg); }
+@media (max-width: 600px) {
+ .event-feature-sparkles { top: -18px; right: -17px; width: 34px; height: 34px; }
+ .event-feature-flower { width: 59px; height: 59px; left: -20px; bottom: -23px; }
+ .event-feature-story h2 { font-size: clamp(21px, 5.5vw, 30px); }
+ .event-feature-action { padding-inline: 10px; gap: 10px; font-size: 10px; }
+}
