@@ -17,6 +17,10 @@
  display: block;
  transform-origin: top left;
 }
+/* Each paper grows to its measured free space on roomy boards. */
+@media (min-width: 2200px) and (min-height: 1000px) {
+ .scattered-notes .board-note-paper { transform: scale(var(--board-paper-scale, 1.12)); transform-origin: center; }
+}
 .scattered-notes .board-note-button .sticky-note {
  width: 100%;
  max-width: none;
@@ -190,7 +194,7 @@
  position: sticky;
  top: 0;
  height: 0;
- z-index: 2;
+ z-index: 5;
  pointer-events: none;
 }
 .board-note-panel {
@@ -200,7 +204,20 @@
 .board-fixed-title .board-chalk-greeting {
  width: min(480px, calc(var(--board-viewport-width) * .4));
  padding-inline: 28px;
+ border: 0;
+ border-radius: 0;
+ z-index: 1;
+ background: none;
+ box-shadow: none;
 }
+.board-title-backdrop {
+ position: absolute;
+ overflow: hidden;
+ pointer-events: none;
+ clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+}
+.board-title-surface { position: absolute; box-sizing: border-box; }
+.board-title-surface > div { position: absolute; pointer-events: none; }
 .board-fixed-title .board-chalk-greeting h1 { font-size: clamp(34px, 3.65vw, 52px); }
 .board-fixed-title .greeting-chalk-emblem { width: clamp(60px, 6vw, 84px); }
 .board-fixed-title .greeting-doodle-heart,
@@ -246,3 +263,13 @@
  .board-fixed-title .board-chalk-greeting { width: min(462px, calc(var(--board-viewport-width) - 32px)); padding: 10px 32px 14px; }
  .board-fixed-title .board-chalk-greeting h1 { font-size: clamp(26px, min(6.8vw, 5.4svh), 40px); }
 }
+@media (max-width: 1099px) {
+ .board-fixed-title .board-chalk-greeting { width: min(350px, calc(var(--board-viewport-width) - 16px)); padding: 4px 20px 8px; }
+ .board-fixed-title .board-chalk-greeting h1 { font-size: clamp(22px, 5.5vw, 26px); }
+ .board-fixed-title .greeting-chalk-emblem { width: 44px; }
+}
+.scattered-notes .sticky-note.note-readable-preview .note-content { align-items: center; }
+.scattered-notes .sticky-note.note-readable-preview .note-writing { font-size: 14px; height: max-content; justify-content: center; gap: .6em; }
+.scattered-notes .sticky-note.note-readable-preview h2,
+.scattered-notes .sticky-note.note-readable-preview .note-signature,
+.scattered-notes .sticky-note.note-readable-preview .note-message { display: block; -webkit-line-clamp: unset; overflow: visible; }

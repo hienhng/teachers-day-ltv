@@ -1,5 +1,43 @@
 export type BoardNotePosition = {left:number;top:number;rotation:number};
 export type BoardReservedArea = {x:number;y:number;width:number;height:number};
+export type BoardPaperBounds = BoardReservedArea&{centerX:number;centerY:number};
+
+// Grow together, shifting into nearby gaps when the current position gets tight.
+// Measured bounds include tape and stickers; every move preserves clearance.
+export function growBoardPapers(papers:BoardPaperBounds[],width:number,height:number,greeting?:BoardReservedArea){
+ const padding=8,gap=12,placements=papers.map(()=>({scale:1,offsetX:0,offsetY:0})),boxes:BoardReservedArea[]=papers.map(paper=>({...paper}));
+ for(let step=1;step<=50;step++)for(let index=0;index<papers.length;index++){
+  const paper=papers[index],scale=1+step*.02,placement=placements[index];
+  const box={x:paper.centerX+(paper.x-paper.centerX)*scale+placement.offsetX,y:paper.centerY+(paper.y-paper.centerY)*scale+placement.offsetY,width:paper.width*scale,height:paper.height*scale};
+  const maxX=width-padding-box.width,maxY=height-padding-box.height;
+  if(maxX<padding||maxY<padding)continue;
+  const obstacles=[...boxes.filter((_,otherIndex)=>otherIndex!==index),...(greeting?[greeting]:[])];
+  const ys=[Math.max(padding,Math.min(maxY,box.y)),padding,maxY,...obstacles.flatMap(other=>[other.y-box.height-gap,other.y+other.height+gap])];
+  let best:{x:number;y:number;distance:number}|undefined;
+  for(const y of ys){
+   if(y<padding||y>maxY)continue;
+   let ranges=[[padding,maxX]];
+   for(const other of obstacles){
+    if(y>=other.y+other.height+gap||other.y>=y+box.height+gap)continue;
+    const start=other.x-box.width-gap,end=other.x+other.width+gap;
+    ranges=ranges.flatMap(([low,high])=>end<=low||start>=high?[[low,high]]:[...(start>low?[[low,Math.min(high,start)]]:[]),...(end<high?[[Math.max(low,end),high]]:[])]);
+   }
+   for(const [low,high] of ranges){
+    const x=Math.max(low,Math.min(high,box.x)),distance=(x-box.x)**2+(y-box.y)**2;
+    if(!best||distance<best.distance)best={x,y,distance};
+   }
+  }
+  if(!best)continue;
+  placements[index]={scale,offsetX:placement.offsetX+best.x-box.x,offsetY:placement.offsetY+best.y-box.y};
+  boxes[index]={...box,x:best.x,y:best.y};
+ }
+ return placements;
+}
+
+// Only large, tall boards get denser panels; ordinary screens keep their limits.
+function boardPanelDensity(width:number,height:number){
+ return width>=2200&&height>=1000?{limit:20,scale:.92,minimum:180}:{limit:8,scale:1,minimum:readableBoardNoteSize(width)};
+}
 
 // Give each note its own gentle tilt, independent of shape, size and placement.
 // Keep it stable when the note moves to another panel or the viewport resizes.
@@ -13,9 +51,11 @@ export function boardNoteRotation(id:string){
 }
 
 export function boardPanelCapacity(width:number,height:number,greeting?:BoardReservedArea){
+ if(width<1100)return height>=1000?3:2;
+ const {limit,scale,minimum}=boardPanelDensity(width,height);
  const reserved=greeting??{x:width>=760?(width-Math.min(360,width*.32))/2:16,y:(height-(width>=760?240:120))/2,width:width>=760?Math.min(360,width*.32):width-32,height:width>=760?240:120};
- for(let count=8;count>=3;count--)if(panelMetrics(count,width,height,reserved).maxSize>=readableBoardNoteSize(width))return count;
- return 3;
+ for(let count=limit;count>=1;count--)if(panelMetrics(count,width,height,reserved).maxSize*scale>=minimum)return count;
+ return 1;
 }
 
 export function readableBoardNoteSize(width:number){return width>=760?200:160}
@@ -27,13 +67,14 @@ export function boardNoteViewportSize(width:number,height:number){
 
 // Use the busiest panel's available space for one paper size across the board.
 export function boardPanelNoteSize(count:number,width:number,height:number,greeting?:BoardReservedArea){
+ if(width<1100&&count<=3)return Math.max(1,((width-16)/(width<760?1:Math.min(2,Math.max(1,count)))-24)/1.25);
  return Math.min(boardNoteViewportSize(width,height),panelMetrics(count,width,height,greeting).maxSize);
 }
 
-// Keep at least three notes together, merging short tails into balanced panels.
+// Balance panels without exceeding the readable capacity, including single notes.
 export function sectionBoardNotes<T>(notes:T[],capacity=4):T[][]{
- const limit=Math.min(8,Math.max(3,Math.floor(capacity)||3));
- const count=Math.min(Math.ceil(notes.length/limit),Math.max(1,Math.floor(notes.length/3))),sections:T[][]=[];
+ const limit=Math.min(20,Math.max(1,Math.floor(capacity)||1));
+ const count=Math.ceil(notes.length/limit),sections:T[][]=[];
  let offset=0;
  for(let index=0;index<count;index++){
   const size=Math.ceil((notes.length-offset)/(count-index));
@@ -70,11 +111,37 @@ export function sectionMeasuredBoardNotes<T>(notes:T[],capacity:number,width:num
  return panels;
 }
 
+// Fit equal papers into differently sized regions without giving each region
+// the same number of notes. This lets the full-width top and bottom do their share.
+function fitBoardRegions(count:number,regions:BoardReservedArea[]){
+ const gap=12,zones=regions.filter(zone=>zone.width>0&&zone.height>0),needed=Math.max(1,count);
+ const grid=(zone:BoardReservedArea,footprint:number)=>({columns:Math.max(0,Math.floor((zone.width+gap)/(footprint+gap))),rows:Math.max(0,Math.floor((zone.height+gap)/(footprint+gap)))});
+ let low=0,high=Math.max(0,...zones.map(zone=>Math.min(zone.width,zone.height)));
+ for(let step=0;step<32;step++){
+  const footprint=(low+high)/2;
+  const available=zones.reduce((total,zone)=>{const {columns,rows}=grid(zone,footprint);return total+columns*rows},0);
+  if(available>=needed)low=footprint;else high=footprint;
+ }
+ const grids=zones.map(zone=>({...grid(zone,low),used:0})),cells:BoardReservedArea[]=[];
+ while(cells.length<count){
+  const before=cells.length;
+  for(let index=0;index<zones.length&&cells.length<count;index++){
+   const zone=zones[index],grid=grids[index];
+   if(grid.used>=grid.columns*grid.rows)continue;
+   const width=(zone.width-gap*(grid.columns-1))/grid.columns,height=(zone.height-gap*(grid.rows-1))/grid.rows;
+   const slot=grid.used++;
+   cells.push({x:zone.x+(slot%grid.columns)*(width+gap),y:zone.y+Math.floor(slot/grid.columns)*(height+gap),width,height});
+  }
+  if(cells.length===before)break;
+ }
+ return {maxSize:Math.max(1,(low-28)/1.4),cells};
+}
+
 function panelMetrics(count:number,width:number,height:number,greeting?:BoardReservedArea){
  const padding=8,gap=12;
  const sideGreeting=Boolean(greeting&&width>=760);
- // Split the space around the title into lanes and choose a grid that fits the
- // current count. It supplies a safe size and fallback for random placement.
+ // Keep a safe fit for smaller screens, and compare both ways of dividing the
+ // complete board around the title on large screens.
  const zones:BoardReservedArea[]=greeting?(sideGreeting?[
   {x:padding,y:padding,width:greeting.x-gap-padding,height:height-padding*2},
   {x:greeting.x+greeting.width+gap,y:padding,width:width-greeting.x-greeting.width-gap-padding,height:height-padding*2},
@@ -92,12 +159,77 @@ function panelMetrics(count:number,width:number,height:number,greeting?:BoardRes
  }
  const cellWidth=Math.max(1,(laneWidth-gap*(columns-1))/columns),cellHeight=Math.max(1,(laneHeight-gap*(rows-1))/rows);
  const maxSize=Math.max(1,(Math.min(cellWidth,cellHeight)-padding*2-12)/1.4);
- return {zones,columns,cellWidth,cellHeight,maxSize};
+ const cells=Array.from({length:count},(_,index)=>{
+  const zone=zones[index%zones.length],slot=Math.floor(index/zones.length);
+  return {x:zone.x+(slot%columns)*(cellWidth+gap),y:zone.y+Math.floor(slot/columns)*(cellHeight+gap),width:cellWidth,height:cellHeight};
+ });
+ if(greeting&&sideGreeting&&boardPanelDensity(width,height).limit===20){
+  const fullBoard=fitBoardRegions(count,[
+   {x:padding,y:padding,width:width-padding*2,height:greeting.y-gap-padding},
+   {x:padding,y:greeting.y+greeting.height+gap,width:width-padding*2,height:height-greeting.y-greeting.height-gap-padding},
+   {x:padding,y:greeting.y,width:greeting.x-gap-padding,height:greeting.height},
+   {x:greeting.x+greeting.width+gap,y:greeting.y,width:width-greeting.x-greeting.width-gap-padding,height:greeting.height},
+  ]);
+  if(fullBoard.maxSize>maxSize&&fullBoard.cells.length===count)return fullBoard;
+ }
+ return {cells,maxSize};
+}
+
+// Start from a safe fit, then move papers through free horizontal and vertical
+// gaps. Dense panels can loosen up without relying on lucky random packing.
+function loosenBoardPositions(positions:BoardNotePosition[],sizes:number[],width:number,height:number,reserved:BoardReservedArea|undefined,random:()=>number){
+ const padding=8,gap=12;
+ const boxes=positions.map(({left,top},index)=>{
+  const footprint=sizes[index]*1.4+12,inset=(footprint-sizes[index])/2;
+  return {x:left-inset,y:top-inset,width:footprint,height:footprint};
+ });
+ for(let pass=0;pass<24;pass++)for(let offset=0;offset<boxes.length;offset++){
+  const index=(offset+pass)%boxes.length,box=boxes[index];
+  // Move between open pockets too, so a paper need not slide past a neighbor
+  // to leave its original row or reach space on another side of the title.
+  for(let attempt=0;attempt<16;attempt++){
+   const x=padding+random()*Math.max(0,width-padding*2-box.width),y=padding+random()*Math.max(0,height-padding*2-box.height);
+   if([...boxes.filter((_,otherIndex)=>otherIndex!==index),...(reserved?[reserved]:[])].every(other=>x>=other.x+other.width+gap||other.x>=x+box.width+gap||y>=other.y+other.height+gap||other.y>=y+box.height+gap)){
+    box.x=x;box.y=y;break;
+   }
+  }
+  for(const horizontal of [pass%2===0,pass%2!==0]){
+   const axis=horizontal?'x':'y',cross=horizontal?'y':'x',length=horizontal?'width':'height',breadth=horizontal?'height':'width';
+   let ranges=[[padding,(horizontal?width:height)-padding-box[length]]];
+   for(const other of [...boxes.filter((_,otherIndex)=>otherIndex!==index),...(reserved?[reserved]:[])]){
+    if(box[cross]>=other[cross]+other[breadth]+gap||other[cross]>=box[cross]+box[breadth]+gap)continue;
+    const start=other[axis]-box[length]-gap,end=other[axis]+other[length]+gap;
+    ranges=ranges.flatMap(([low,high])=>end<=low||start>=high?[[low,high]]:[...(start>low?[[low,Math.min(high,start)]]:[]),...(end<high?[[Math.max(low,end),high]]:[])]);
+   }
+   const space=ranges.reduce((total,[low,high])=>total+Math.max(0,high-low),0);
+   if(space<=0)continue;
+   let choice=random()*space;
+   for(const [low,high] of ranges){
+    if(choice<=high-low){box[axis]=low+choice;break}
+    choice-=high-low;
+   }
+  }
+ }
+ return positions.map((position,index)=>({...position,left:boxes[index].x+(boxes[index].width-sizes[index])/2,top:boxes[index].y+(boxes[index].height-sizes[index])/2}));
 }
 
 export function layoutBoardPanel(ids:string[],width:number,height:number,noteSizes:number[]=[],greeting?:BoardReservedArea,viewportSize=boardNoteViewportSize(width,height),proportional=false):{size:number;sizes:number[];width:number;height:number;positions:BoardNotePosition[]}{
+ // Small screens use large, readable papers below a compact heading. Short
+ // landscape screens scroll vertically rather than shrinking the writing.
+ if(proportional&&width<1100&&ids.length>0&&ids.length<=3){
+  const padding=8,gap=24,columns=width<760?1:Math.min(2,ids.length),rows=Math.ceil(ids.length/columns);
+  const target=boardPanelNoteSize(columns,width,height,greeting);
+  const sizes=ids.map((_,index)=>Math.min(target,noteSizes[index]||target));
+  const footprints=sizes.map(size=>size*1.25+12),start=Math.max(padding,greeting?greeting.y+greeting.height+gap:padding);
+  const rowHeight=Math.max(...footprints)+gap;
+  const boardHeight=Math.max(height,start+rows*rowHeight-gap+padding);
+  const laneWidth=(width-padding*2)/columns;
+  const extra=(boardHeight-start-padding-(rows*rowHeight-gap))/2;
+  const positions=ids.map((id,index)=>({left:padding+laneWidth*(index%columns+.5)-sizes[index]/2,top:start+extra+Math.floor(index/columns)*rowHeight+(Math.max(...footprints)-sizes[index])/2,rotation:boardNoteRotation(id)}));
+  return {size:target,sizes,width,height:boardHeight,positions};
+ }
  const padding=8,gap=12,sideGreeting=Boolean(greeting&&width>=760);
- const {zones,columns,cellWidth,cellHeight,maxSize}=panelMetrics(ids.length,width,height,greeting);
+ const {cells,maxSize}=panelMetrics(ids.length,width,height,greeting);
  const size=Math.min(viewportSize,maxSize);
  const minimum=Math.min(readableBoardNoteSize(width),maxSize);
  let seed=2166136261;
@@ -112,15 +244,15 @@ export function layoutBoardPanel(ids:string[],width:number,height:number,noteSiz
  // Place the hardest-to-fit notes first, preserving their original render order.
  const placementOrder=sizes.map((_,index)=>index).sort((a,b)=>sizes[b]-sizes[a]);
  // A roomy fallback guarantees every note fits even on a very small screen.
+ const slots=ids.map((_,index)=>index);
+ for(let index=slots.length-1;index>0;index--){const other=Math.floor(random()*(index+1));[slots[index],slots[other]]=[slots[other],slots[index]]}
  const fallback=ids.map((_,index)=>{
   const x=random(),y=random();
-  const zone=zones[index%zones.length],slot=Math.floor(index/zones.length);
-  const column=slot%columns,row=Math.floor(slot/columns),noteSize=sizes[index],footprint=noteSize*1.4+12;
-  const left=zone.x+column*(cellWidth+gap),top=zone.y+row*(cellHeight+gap);
-  return {left:left+(cellWidth-footprint)*x+(footprint-noteSize)/2,top:top+(cellHeight-footprint)*y+(footprint-noteSize)/2,rotation:boardNoteRotation(ids[index])};
+  const cell=cells[slots[index]],noteSize=sizes[index],footprint=noteSize*1.4+12;
+  return {left:cell.x+(cell.width-footprint)*x+(footprint-noteSize)/2,top:cell.y+(cell.height-footprint)*y+(footprint-noteSize)/2,rotation:boardNoteRotation(ids[index])};
  });
- // Keep the desktop title's entire vertical lane clear during scrolling too.
- const reserved=greeting?(sideGreeting?{x:greeting.x,y:0,width:greeting.width,height}:greeting):undefined;
+ // Reserve only the title itself; notes can use the space above and below it.
+ const reserved=greeting;
  const separate=(box:BoardReservedArea,other:BoardReservedArea)=>box.x>=other.x+other.width+gap||other.x>=box.x+box.width+gap||box.y>=other.y+other.height+gap||other.y>=box.y+box.height+gap;
  // Retry the whole arrangement so an unlucky early placement never forces overlap.
  for(let attempt=0;attempt<12;attempt++){
@@ -143,7 +275,7 @@ export function layoutBoardPanel(ids:string[],width:number,height:number,noteSiz
   }
   if(placedCount===ids.length)return {size,sizes,width,height,positions};
  }
- if(sizes.every(noteSize=>noteSize<=maxSize))return {size,sizes,width,height,positions:fallback};
+ if(sizes.every(noteSize=>noteSize<=maxSize))return {size,sizes,width,height,positions:loosenBoardPositions(fallback,sizes,width,height,reserved,random)};
  // Share any necessary reduction across all notes. Capping each note separately
  // wastes space on short messages and makes detailed messages harder to read.
  if(proportional)return layoutBoardPanel(ids,width,height,sizes.map(noteSize=>noteSize*.94),greeting,viewportSize,true);

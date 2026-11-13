@@ -1,4 +1,4 @@
-export const boardPanelInterval=5_000;
+export const boardPanelInterval=120_000;
 
 /** Keep the loop duplicate outside manual scrolling; reveal it only while wrapping. */
 export function startBoardPanelScroll(viewport:HTMLElement,board:HTMLElement){

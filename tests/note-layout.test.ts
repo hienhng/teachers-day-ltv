@@ -1,8 +1,40 @@
 import {describe,it,expect} from 'vitest';
 import {noteShapes,noteContentInsets,noteStickerSize} from '../lib/note-design';
-import {boardPanelNoteSize,boardNoteViewportSize,boardPanelCapacity,scatterBoardNotes,sectionBoardNotes,sectionMeasuredBoardNotes,layoutBoardPanel} from '../lib/board-note-layout';
+import {boardPanelNoteSize,boardNoteViewportSize,boardPanelCapacity,growBoardPapers,scatterBoardNotes,sectionBoardNotes,sectionMeasuredBoardNotes,layoutBoardPanel} from '../lib/board-note-layout';
 
 describe('sectioned board panels',()=>{
+ it('enlarges papers into free space while keeping their decorations apart and inside the board',()=>{
+  const papers=[{x:80,y:80,width:180,height:200,centerX:170,centerY:180},{x:330,y:80,width:190,height:200,centerX:425,centerY:180},{x:850,y:500,width:200,height:210,centerX:950,centerY:605}];
+  const title={x:500,y:360,width:220,height:140};
+  const placements=growBoardPapers(papers,1200,900,title);
+  expect(placements.every(placement=>placement.scale>=1.5)).toBe(true);
+  expect(placements.some(placement=>placement.scale===2)).toBe(true);
+  expect(placements.some(placement=>placement.offsetX!==0||placement.offsetY!==0)).toBe(true);
+  const boxes=papers.map((paper,index)=>({x:paper.centerX+(paper.x-paper.centerX)*placements[index].scale+placements[index].offsetX,y:paper.centerY+(paper.y-paper.centerY)*placements[index].scale+placements[index].offsetY,width:paper.width*placements[index].scale,height:paper.height*placements[index].scale}));
+  boxes.forEach((box,index)=>{
+   expect(box.x).toBeGreaterThanOrEqual(8);expect(box.y).toBeGreaterThanOrEqual(8);
+   expect(box.x+box.width).toBeLessThanOrEqual(1192);expect(box.y+box.height).toBeLessThanOrEqual(892);
+   for(const other of [...boxes.slice(index+1),title])expect(box.x+box.width+12<=other.x||other.x+other.width+12<=box.x||box.y+box.height+12<=other.y||other.y+other.height+12<=box.y).toBe(true);
+  });
+ });
+ it('keeps enlarged desktop paper, tape and stickers inside the collision clearance',()=>{
+  for(const width of [180,240,480,800])for(const shape of Object.values(noteShapes)){
+   const paper=width*1.12,points=[{x:0,y:0},{x:paper,y:0},{x:paper,y:paper},{x:0,y:paper}];
+   const addRectangle=(x:number,y:number,w:number,h:number,rotation:number)=>{
+    const angle=rotation*Math.PI/180;
+    for(const [dx,dy] of [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]])points.push({x:x+dx*Math.cos(angle)-dy*Math.sin(angle),y:y+dx*Math.sin(angle)+dy*Math.cos(angle)});
+   };
+   const tapeWidth=Math.max(22,Math.min(76,paper*.18));
+   addRectangle(paper*shape.tape.x/100,paper*shape.tape.y/100,tapeWidth,tapeWidth/2.8,shape.tape.rotation);
+   for(const sticker of shape.stickers)addRectangle(paper*sticker.x/100,paper*sticker.y/100,paper*noteStickerSize/100,paper*noteStickerSize/100,sticker.rotation);
+   for(const rotation of [-5,0,5])for(const point of points){
+    const angle=rotation*Math.PI/180,x=point.x-paper/2,y=point.y-paper/2,radius=(width*1.4+12)/2;
+    // Include room for the decoration outlines and paper shadow.
+    expect(Math.abs(x*Math.cos(angle)-y*Math.sin(angle))+4).toBeLessThanOrEqual(radius);
+    expect(Math.abs(x*Math.sin(angle)+y*Math.cos(angle))+4).toBeLessThanOrEqual(radius);
+   }
+  }
+ });
  it('gives identical-shaped notes individual gentle tilts independent of sizing and panel order',()=>{
   const ids=Array.from({length:12},(_,index)=>`same-shape-${index}`);
   const original=layoutBoardPanel(ids,1440,900,ids.map(()=>200));
@@ -25,7 +57,8 @@ describe('sectioned board panels',()=>{
     const ids=Array.from({length:count},(_,index)=>`equal-${index}`);
     const layout=layoutBoardPanel(ids,width,height,ids.map(()=>size),greeting,undefined,true);
     expect(layout.sizes).toEqual(ids.map(()=>size));
-    expect(layout.width).toBe(width);expect(layout.height).toBe(height);
+    expect(layout.width).toBe(width);
+    if(width<1100&&count<=3)expect(layout.height).toBeGreaterThanOrEqual(height);else expect(layout.height).toBe(height);
    }
   }
  });
@@ -84,11 +117,11 @@ describe('sectioned board panels',()=>{
  });
  it('uses larger displays for more readable scattered notes per panel',()=>{
   const small=boardPanelCapacity(1328,750),large=boardPanelCapacity(2560,1440);
-  expect(large).toBeGreaterThan(small);expect(large).toBe(8);
+  expect(large).toBeGreaterThan(small);expect(large).toBe(20);
   const greeting={x:1100,y:600,width:360,height:240};
   const ids=Array.from({length:large},(_,index)=>`large-${index}`);
   const panels=sectionMeasuredBoardNotes(ids,large,2560,1440,id=>id,()=>200,greeting);
-  expect(panels[0].length).toBe(8);
+  expect(panels[0].length).toBe(20);
   const layout=layoutBoardPanel(panels[0],2560,1440,panels[0].map(()=>200),greeting);
   expect(layout.width).toBe(2560);expect(layout.height).toBe(1440);
   expect(new Set(layout.positions.map(position=>position.top)).size).toBe(panels[0].length);
@@ -106,48 +139,112 @@ describe('sectioned board panels',()=>{
    panel.forEach((note,index)=>expect(layout.sizes[index]).toBeGreaterThanOrEqual(note.size));
   });
  });
+ it('fills a wide desktop board with twenty readable notes around all sides of the title',()=>{
+  const width=2428,height=1088,greeting={x:(width-504)/2,y:(height-378)/2,width:504,height:378};
+  expect(boardPanelCapacity(width,height,greeting)).toBe(20);
+  expect(boardPanelCapacity(2420,1250,{...greeting,x:(2420-504)/2,y:(1250-378)/2})).toBe(20);
+  expect(boardPanelCapacity(3720,1900)).toBe(20);
+  expect(boardPanelCapacity(2199,1440)).toBeLessThanOrEqual(8);
+  expect(boardPanelCapacity(2560,999)).toBeLessThanOrEqual(8);
+  const notes=Array.from({length:40},(_,index)=>`dense-${index}`);
+  const panels=sectionBoardNotes(notes,boardPanelCapacity(width,height,greeting));
+  expect(panels.map(panel=>panel.length)).toEqual([20,20]);
+  const size=boardPanelNoteSize(20,width,height,greeting);
+  expect(size).toBeGreaterThanOrEqual(198);
+  expect(size).toBeCloseTo(layoutBoardPanel(panels[0],width,height,[],greeting).size);
+  expect(size).toBeLessThan(boardPanelNoteSize(8,width,height,greeting));
+  for(const panel of panels){
+   const layout=layoutBoardPanel(panel,width,height,panel.map(()=>size),greeting,undefined,true);
+   expect(layout).toMatchObject({width,height,sizes:panel.map(()=>size)});
+   const boxes=layout.positions.map(({left,top},index)=>{
+    const paper=layout.sizes[index],footprint=paper*1.4+12;
+    return {x:left-(footprint-paper)/2,y:top-(footprint-paper)/2,width:footprint,height:footprint};
+   });
+   boxes.forEach((box,index)=>{
+    expect(box.x).toBeGreaterThanOrEqual(0);expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.x+box.width).toBeLessThanOrEqual(width);expect(box.y+box.height).toBeLessThanOrEqual(height);
+    for(const other of [...boxes.slice(index+1),greeting])expect(box.x+box.width<=other.x||other.x+other.width<=box.x||box.y+box.height<=other.y||other.y+other.height<=box.y).toBe(true);
+   });
+  }
+ });
  it('adapts capacity to board width and height and balances larger panels',()=>{
   expect(boardPanelCapacity(1920,900)).toBe(8);
   expect(boardPanelCapacity(1328,750)).toBe(4);
-  expect(boardPanelCapacity(1170,550)).toBe(3);
-  expect(boardPanelCapacity(850,600)).toBe(3);
-  expect(boardPanelCapacity(350,700)).toBe(3);
-  expect(boardPanelCapacity(1328,320)).toBe(3);
+  expect(boardPanelCapacity(1170,550)).toBe(2);
+  expect(boardPanelCapacity(850,600)).toBe(2);
+  expect(boardPanelCapacity(350,700)).toBe(2);
+  expect(boardPanelCapacity(1328,320)).toBe(1);
   const notes=Array.from({length:30},(_,index)=>index);
   expect(sectionBoardNotes(notes,8).map(panel=>panel.length)).toEqual([8,8,7,7]);
-  for(const capacity of [3,4,5,6,7,8,12]){
+  expect(sectionBoardNotes(Array.from({length:40}),20).map(panel=>panel.length)).toEqual([20,20]);
+  for(const capacity of [3,4,5,6,7,8,12,20,30]){
    const panels=sectionBoardNotes(notes,capacity);
    expect(panels.flat()).toEqual(notes);
-   panels.forEach(panel=>expect(panel.length).toBeLessThanOrEqual(Math.min(capacity,8)));
+   panels.forEach(panel=>expect(panel.length).toBeLessThanOrEqual(Math.min(capacity,20)));
   }
  });
- it('keeps at least three notes per panel and scales them to the available space',()=>{
+ it('uses two or three large notes per small-screen panel without shrinking to the viewport height',()=>{
+  for(const [width,height] of [[280,600],[350,700],[390,1100],[700,320],[850,1100]]){
+   const capacity=boardPanelCapacity(width,height),greeting={x:16,y:0,width:width-32,height:170};
+   expect(capacity).toBe(height>=1000?3:2);
+   const panels=sectionBoardNotes(Array.from({length:10},(_,index)=>`readable-${index}`),capacity);
+   const size=boardPanelNoteSize(capacity,width,height,greeting);
+   expect(size).toBeGreaterThanOrEqual(190);
+   for(const panel of panels){
+    expect(panel.length).toBeGreaterThanOrEqual(2);expect(panel.length).toBeLessThanOrEqual(3);
+    const layout=layoutBoardPanel(panel,width,height,panel.map(()=>size),greeting,undefined,true);
+    expect(layout.sizes).toEqual(panel.map(()=>size));
+    expect(layout.width).toBe(width);
+    expect(layout.height).toBeGreaterThanOrEqual(height);
+    if(width<760)expect(new Set(layout.positions.map(position=>position.left)).size).toBe(1);
+   }
+  }
+ });
+ it('scatters dense panels above and below the title while keeping the arrangement stable',()=>{
+  const width=3708,height=1980,greeting={x:(width-504)/2,y:(height-378)/2,width:504,height:378};
+  const size=boardPanelNoteSize(20,width,height,greeting);
+  for(let seed=0;seed<5;seed++){
+   const ids=Array.from({length:20},(_,index)=>`scatter-${seed}-${index}`);
+   const sizes=ids.map((_,index)=>size*(index%4===0?.92:1));
+   const layout=layoutBoardPanel(ids,width,height,sizes,greeting,undefined,true);
+   const tops=layout.positions.map(position=>position.top).sort((a,b)=>a-b);
+   // Six aligned papers made each old row read as a grid, even with tilted notes.
+   const aligned=tops.map(top=>tops.filter(other=>other>=top&&other<top+size*.3).length);
+   expect(Math.max(...aligned)).toBeLessThanOrEqual(5);
+   const centerNotes=layout.positions.map((position,index)=>({x:position.left+sizes[index]/2,y:position.top+sizes[index]/2})).filter(position=>position.x>=greeting.x&&position.x<=greeting.x+greeting.width);
+   expect(centerNotes.some(position=>position.y<greeting.y)).toBe(true);
+   expect(centerNotes.some(position=>position.y>greeting.y+greeting.height)).toBe(true);
+   expect(layoutBoardPanel(ids,width,height,sizes,greeting,undefined,true)).toEqual(layout);
+   expect(layout.sizes).toEqual(sizes);
+  }
+ });
+ it('balances panels without exceeding their readable capacity',()=>{
   for(const [width,height] of [[350,700],[1328,750],[1170,550],[1920,900]]){
    const greeting={x:width>=760?(width-360)/2:16,y:(height-120)/2,width:width>=760?360:width-32,height:120};
    const capacity=boardPanelCapacity(width,height,greeting);
-   expect(capacity).toBeGreaterThanOrEqual(3);
+   expect(capacity).toBeGreaterThanOrEqual(1);
    expect(capacity).toBeLessThanOrEqual(8);
    for(let count=0;count<=30;count++){
     const notes=Array.from({length:count},(_,index)=>`adaptive-${index}`);
     const panels=sectionBoardNotes(notes,capacity);
     expect(panels.flat()).toEqual(notes);
     panels.forEach(panel=>{
-     expect(panel.length).toBeGreaterThanOrEqual(Math.min(3,count));
-     expect(panel.length).toBeLessThanOrEqual(8);
+     expect(panel.length).toBeGreaterThanOrEqual(1);
+     expect(panel.length).toBeLessThanOrEqual(capacity);
      const base=layoutBoardPanel(panel,width,height,[],greeting);
      const fitted=layoutBoardPanel(panel,width,height,panel.map(()=>Math.min(1200,base.size)),greeting);
      expect(fitted.width).toBe(width);expect(fitted.height).toBe(height);
     });
    }
   }
-  expect(sectionBoardNotes(['a','b','c','d','e'],3).map(panel=>panel.length)).toEqual([5]);
-  expect(sectionBoardNotes(['a','b','c','d','e','f','g'],3).map(panel=>panel.length)).toEqual([4,3]);
+  expect(sectionBoardNotes(['a','b','c','d','e'],3).map(panel=>panel.length)).toEqual([3,2]);
+  expect(sectionBoardNotes(['a','b','c','d','e','f','g'],3).map(panel=>panel.length)).toEqual([3,2,2]);
  });
- it('balances notes into panels of three or four whenever possible without reordering',()=>{
+ it('balances notes into panels of up to four without reordering',()=>{
   for(let count=0;count<=60;count++){
    const notes=Array.from({length:count},(_,index)=>index),panels=sectionBoardNotes(notes);
    expect(panels.flat()).toEqual(notes);
-   panels.forEach(panel=>{expect(panel.length).toBeLessThanOrEqual(count===5?5:4);expect(panel.length).toBeGreaterThanOrEqual(Math.min(count,3))});
+   panels.forEach(panel=>{expect(panel.length).toBeLessThanOrEqual(4);expect(panel.length).toBeGreaterThanOrEqual(Math.min(count,2))});
   }
   expect(sectionBoardNotes(Array.from({length:10})).map(panel=>panel.length)).toEqual([4,3,3]);
  });
@@ -180,7 +277,7 @@ describe('sectioned board panels',()=>{
    boxes.forEach((box,index)=>{
     expect(box.x).toBeGreaterThanOrEqual(0);expect(box.y).toBeGreaterThanOrEqual(0);
     const titleLeft=(layout.width-greeting.width)/2,titleRight=titleLeft+greeting.width;
-    expect(box.x+box.width<=titleLeft||box.x>=titleRight).toBe(true);
+    expect(box.x+box.width<=titleLeft||box.x>=titleRight||box.y+box.height<=greeting.y||box.y>=greeting.y+greeting.height).toBe(true);
     expect(box.x+box.width).toBeLessThanOrEqual(layout.width);
     expect(box.y+box.height).toBeLessThanOrEqual(layout.height);
     for(const other of boxes.slice(index+1))expect(box.x+box.width<=other.x||other.x+other.width<=box.x||box.y+box.height<=other.y||other.y+other.height<=box.y).toBe(true);
