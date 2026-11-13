@@ -14,7 +14,7 @@ export function boardNoteRotation(id:string){
 
 export function boardPanelCapacity(width:number,height:number,greeting?:BoardReservedArea){
  const reserved=greeting??{x:width>=760?(width-Math.min(360,width*.32))/2:16,y:(height-(width>=760?240:120))/2,width:width>=760?Math.min(360,width*.32):width-32,height:width>=760?240:120};
- for(let count=5;count>=3;count--)if(panelMetrics(count,width,height,reserved).maxSize>=readableBoardNoteSize(width))return count;
+ for(let count=8;count>=3;count--)if(panelMetrics(count,width,height,reserved).maxSize>=readableBoardNoteSize(width))return count;
  return 3;
 }
 
@@ -32,7 +32,7 @@ export function boardPanelNoteSize(count:number,width:number,height:number,greet
 
 // Keep at least three notes together, merging short tails into balanced panels.
 export function sectionBoardNotes<T>(notes:T[],capacity=4):T[][]{
- const limit=Math.min(5,Math.max(3,Math.floor(capacity)||3));
+ const limit=Math.min(8,Math.max(3,Math.floor(capacity)||3));
  const count=Math.min(Math.ceil(notes.length/limit),Math.max(1,Math.floor(notes.length/3))),sections:T[][]=[];
  let offset=0;
  for(let index=0;index<count;index++){

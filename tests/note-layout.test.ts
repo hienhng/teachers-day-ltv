@@ -20,8 +20,8 @@ describe('sectioned board panels',()=>{
  it('keeps paper sizes equal across panels with different numbers of notes',()=>{
   for(const [width,height] of [[320,500],[390,700],[850,600],[1440,900],[2560,1440]]){
    const greeting={x:width>=760?width*.35:16,y:height/2-60,width:width>=760?width*.3:width-32,height:120};
-   const size=boardPanelNoteSize(5,width,height,greeting);
-   for(const count of [1,3,4,5]){
+   const size=boardPanelNoteSize(8,width,height,greeting);
+   for(const count of [1,3,4,5,6,7,8]){
     const ids=Array.from({length:count},(_,index)=>`equal-${index}`);
     const layout=layoutBoardPanel(ids,width,height,ids.map(()=>size),greeting,undefined,true);
     expect(layout.sizes).toEqual(ids.map(()=>size));
@@ -84,11 +84,11 @@ describe('sectioned board panels',()=>{
  });
  it('uses larger displays for more readable scattered notes per panel',()=>{
   const small=boardPanelCapacity(1328,750),large=boardPanelCapacity(2560,1440);
-  expect(large).toBeGreaterThan(small);expect(large).toBe(5);
+  expect(large).toBeGreaterThan(small);expect(large).toBe(8);
   const greeting={x:1100,y:600,width:360,height:240};
   const ids=Array.from({length:large},(_,index)=>`large-${index}`);
   const panels=sectionMeasuredBoardNotes(ids,large,2560,1440,id=>id,()=>200,greeting);
-  expect(panels[0].length).toBe(5);
+  expect(panels[0].length).toBe(8);
   const layout=layoutBoardPanel(panels[0],2560,1440,panels[0].map(()=>200),greeting);
   expect(layout.width).toBe(2560);expect(layout.height).toBe(1440);
   expect(new Set(layout.positions.map(position=>position.top)).size).toBe(panels[0].length);
@@ -107,18 +107,18 @@ describe('sectioned board panels',()=>{
   });
  });
  it('adapts capacity to board width and height and balances larger panels',()=>{
-  expect(boardPanelCapacity(1920,900)).toBe(5);
+  expect(boardPanelCapacity(1920,900)).toBe(8);
   expect(boardPanelCapacity(1328,750)).toBe(4);
   expect(boardPanelCapacity(1170,550)).toBe(3);
   expect(boardPanelCapacity(850,600)).toBe(3);
   expect(boardPanelCapacity(350,700)).toBe(3);
   expect(boardPanelCapacity(1328,320)).toBe(3);
   const notes=Array.from({length:30},(_,index)=>index);
-  expect(sectionBoardNotes(notes,8).map(panel=>panel.length)).toEqual([5,5,5,5,5,5]);
-  for(const capacity of [3,4,6,8]){
+  expect(sectionBoardNotes(notes,8).map(panel=>panel.length)).toEqual([8,8,7,7]);
+  for(const capacity of [3,4,5,6,7,8,12]){
    const panels=sectionBoardNotes(notes,capacity);
    expect(panels.flat()).toEqual(notes);
-   panels.forEach(panel=>expect(panel.length).toBeLessThanOrEqual(Math.min(capacity,5)));
+   panels.forEach(panel=>expect(panel.length).toBeLessThanOrEqual(Math.min(capacity,8)));
   }
  });
  it('keeps at least three notes per panel and scales them to the available space',()=>{
@@ -126,14 +126,14 @@ describe('sectioned board panels',()=>{
    const greeting={x:width>=760?(width-360)/2:16,y:(height-120)/2,width:width>=760?360:width-32,height:120};
    const capacity=boardPanelCapacity(width,height,greeting);
    expect(capacity).toBeGreaterThanOrEqual(3);
-   expect(capacity).toBeLessThanOrEqual(5);
+   expect(capacity).toBeLessThanOrEqual(8);
    for(let count=0;count<=30;count++){
     const notes=Array.from({length:count},(_,index)=>`adaptive-${index}`);
     const panels=sectionBoardNotes(notes,capacity);
     expect(panels.flat()).toEqual(notes);
     panels.forEach(panel=>{
      expect(panel.length).toBeGreaterThanOrEqual(Math.min(3,count));
-     expect(panel.length).toBeLessThanOrEqual(5);
+     expect(panel.length).toBeLessThanOrEqual(8);
      const base=layoutBoardPanel(panel,width,height,[],greeting);
      const fitted=layoutBoardPanel(panel,width,height,panel.map(()=>Math.min(1200,base.size)),greeting);
      expect(fitted.width).toBe(width);expect(fitted.height).toBe(height);
