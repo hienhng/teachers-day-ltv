@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useLayoutEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useLayoutEffect,useRef,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import Link from 'next/link';
 import {createLetterQR} from '../lib/letter-qr';
@@ -10,10 +10,12 @@ import './community-board.css';
 import {SiteNavigation} from './site-navigation';
 import {ReceivedLetter} from './received-letter';
 import {BoardNoteActions} from './board-note-actions';
+import {BoardHomeButton,BoardPagination} from './board-pagination';
 import {MakerPanel} from './maker-panel';
 import {DoodleArt} from './doodle-art';
 import {type Decoration,type Card} from '../lib/card-validation';
 import {type ModerationStatus} from '../lib/moderation-policy';
+import {startBoardLiveUpdates} from '../lib/board-live-updates';
 const blank:Card={flower:'tulip',theme:'meadow',recipient:'',message:'',sender:'',anonymous:false,shareSender:true,decorations:[]};
 type NoteOpenOrigin={left:number;top:number;width:number;height:number;rotation:number};
 function boardNoteOrigin(source:HTMLButtonElement):NoteOpenOrigin{
@@ -104,23 +106,25 @@ export default function Petals({initialView='home'}:{initialView?:'home'|'garden
  useEffect(()=>{const media=window.matchMedia('(max-width: 700px)');const updatePageSize=()=>{setGardenPageSize(media.matches?10:20);setGardenPage(0)};updatePageSize();media.addEventListener('change',updatePageSize);return()=>media.removeEventListener('change',updatePageSize)},[]);
  useEffect(()=>{
   if(view!=='garden')return;
-  const controller=new AbortController(),target=new URLSearchParams(location.search).get('note');
+  const target=new URLSearchParams(location.search).get('note');
   setLoading(true);setError('');
-  const query=new URLSearchParams({limit:String(gardenPageSize),offset:String(gardenPage*gardenPageSize)});
-  if(target)query.set('note',target);
-  fetch(`/api/cards?${query}`,{signal:controller.signal}).then(async r=>{
-   const d=await r.json() as {error:string;cards:Card[];hasMore:boolean;page:number};
-   if(controller.signal.aborted)return;
-   if(!r.ok)throw Error(d.error);
-   setGarden(d.cards);setGardenHasMore(d.hasMore);setGardenPage(d.page);
-   setBoardTarget(target&&d.cards.some(note=>note.id===target)?target:undefined);
-  }).catch(e=>{if(!controller.signal.aborted)setError((e as Error).message)}).finally(()=>{if(!controller.signal.aborted)setLoading(false)});
-  return()=>controller.abort();
+  return startBoardLiveUpdates({page:gardenPage,pageSize:gardenPageSize,target,
+   onUpdate:d=>{
+    setError('');
+    // Moderation may empty the final page while someone is reading it.
+    if(!d.cards.length&&d.page>0){setGardenPage(d.page-1);return}
+    setGarden(previous=>JSON.stringify(previous)===JSON.stringify(d.cards)?previous:d.cards);
+    setGardenHasMore(d.hasMore);setGardenPage(d.page);
+    setBoardTarget(target&&d.cards.some(note=>note.id===target)?target:undefined);
+   },
+   onError:setError,onSettled:()=>setLoading(false),
+  });
  },[view,gardenPage,gardenPageSize]);
- function changeBoardPage(page:number){
+ const changeBoardPage=useCallback((page:number)=>{
   const url=new URL(location.href);url.searchParams.delete('note');history.replaceState(null,'',url);
   setBoardTarget(undefined);setGardenPage(page);
- }
+ },[]);
+ const advanceBoardPage=useCallback(()=>changeBoardPage(gardenHasMore?gardenPage+1:0),[changeBoardPage,gardenHasMore,gardenPage]);
  const update=(key:keyof Card,value:string|boolean|Decoration[])=>setCard(c=>({...c,[key]:value}));
  function changeStep(nextStep:number){setError('');setStep(nextStep);window.scrollTo({top:0,behavior:'instant'});}
  async function makeBloom(e:React.FormEvent){e.preventDefault();setBusy(true);setError('');try{const r=await fetch('/api/cards',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...card,shareSender:!card.anonymous})}),d=await r.json() as {error:string;card:Card;cards:Card[];hasMore:boolean;editToken:string;moderationStatus:ModerationStatus;moderationReason?:string};if(!r.ok)throw Error(d.error||'Không thể lưu thiệp. Vui lòng thử lại.');setSaved(d.card);setModerationStatus(d.moderationStatus||'pending');setDeadlineRejected(d.moderationReason==='submission_deadline');changeStep(5);ping()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
@@ -186,11 +190,11 @@ export default function Petals({initialView='home'}:{initialView?:'home'|'garden
       {!garden.length&&!loading&&!error&&<p className="board-empty-message">Chiếc bảng đang đợi lời cảm ơn đầu tiên.</p>}
       {loading&&<p className="board-loading" role="status">Đang mở bảng tri ân…</p>}
       {error&&<p className="board-unavailable" role="status">{error} <a className="board-link" href="/board">Xem bảng tri ân →</a></p>}
-    <ScatteredNotes cards={garden} onSelect={openBoardNote} openedCardId={selected?.id} targetCardId={boardTarget} paused={loading||Boolean(error)} showGreeting/>
+    <ScatteredNotes cards={garden} page={gardenPage} onSelect={openBoardNote} openedCardId={selected?.id} targetCardId={boardTarget} paused={loading||Boolean(error)} onPageEnd={gardenPage>0||gardenHasMore?advanceBoardPage:undefined} showGreeting/>
    </div>
    <div className="board-footer">
-    <button className="board-exit" onClick={()=>go('home')} aria-label="Trở về trang chủ" title="Trở về trang chủ">←</button>
-    {(gardenPage>0||gardenHasMore)&&<nav className="board-pagination" aria-label="Các trang bảng tri ân"><button className="board-link" disabled={gardenPage<=0||loading} onClick={()=>changeBoardPage(Math.max(0,gardenPage-1))}>← Trang trước</button><span aria-live="polite">Trang {gardenPage+1}</span><button className="board-link" disabled={!gardenHasMore||loading} onClick={()=>changeBoardPage(gardenPage+1)}>Trang tiếp →</button></nav>}
+    <BoardHomeButton onClick={()=>go('home')}/>
+    <BoardPagination page={gardenPage} hasMore={gardenHasMore} loading={loading} onPage={changeBoardPage}/>
     <p className="privacy-note board-privacy">Chỉ hiển thị lời nhắn đã được LTPC duyệt.</p>
    </div>
    <div className="community-tray" aria-hidden="true"><i/><i/><i/><b/></div>

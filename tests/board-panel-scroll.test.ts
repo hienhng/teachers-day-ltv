@@ -1,5 +1,5 @@
 import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
-import {startBoardPanelScroll} from '../lib/board-panel-scroll';
+import {boardPanelInterval,startBoardPanelScroll} from '../lib/board-panel-scroll';
 
 describe('board panel auto-scroll',()=>{
  let viewport:HTMLElement,board:HTMLElement,stop:()=>void,clock:number,boardClasses:Set<string>;
@@ -82,5 +82,34 @@ describe('board panel auto-scroll',()=>{
  it('continues auto-scrolling when notes have expanded to fit their content',()=>{
   board.querySelectorAll=(()=>[0,500,1000,1500].map(top=>({getBoundingClientRect:()=>({top:30+top-viewport.scrollTop}),hasAttribute:(name:string)=>name==='data-expanded'||name==='data-board-loop-clone'&&top===1500}))) as unknown as typeof board.querySelectorAll;
   vi.advanceTimersByTime(6_100);expect(viewport.scrollTop).toBe(500);
+ });
+ it('loads the next page after showing every panel instead of looping the same notes',()=>{
+  stop();const nextPage=vi.fn();stop=startBoardPanelScroll(viewport,board,nextPage);
+  vi.advanceTimersByTime(boardPanelInterval+1100);expect(viewport.scrollTop).toBe(500);
+  expect(nextPage).not.toHaveBeenCalled();
+  vi.advanceTimersByTime(boardPanelInterval+1100);expect(viewport.scrollTop).toBe(1000);
+  expect(nextPage).not.toHaveBeenCalled();
+  vi.advanceTimersByTime(boardPanelInterval);expect(nextPage).toHaveBeenCalledTimes(1);
+  expect(boardClasses.has('board-is-looping')).toBe(false);
+  vi.advanceTimersByTime(boardPanelInterval*2);expect(nextPage).toHaveBeenCalledTimes(1);
+ });
+ it('advances a single-panel page after the interval',()=>{
+  stop();const nextPage=vi.fn();
+  board.querySelectorAll=(()=>[{getBoundingClientRect:()=>({top:30}),hasAttribute:()=>false}]) as unknown as typeof board.querySelectorAll;
+  stop=startBoardPanelScroll(viewport,board,nextPage);
+  vi.advanceTimersByTime(boardPanelInterval-1);expect(nextPage).not.toHaveBeenCalled();
+  vi.advanceTimersByTime(1);expect(nextPage).toHaveBeenCalledTimes(1);
+ });
+ it('defers page changes while hidden, resets after interaction, and cancels when paused',()=>{
+  stop();const nextPage=vi.fn();viewport.scrollTop=1000;
+  stop=startBoardPanelScroll(viewport,board,nextPage);
+  Object.assign(document,{hidden:true});vi.advanceTimersByTime(boardPanelInterval*2);
+  expect(nextPage).not.toHaveBeenCalled();
+  Object.assign(document,{hidden:false});document.dispatchEvent(new Event('visibilitychange'));
+  vi.advanceTimersByTime(boardPanelInterval-1);viewport.dispatchEvent(new Event('pointerdown'));
+  vi.advanceTimersByTime(boardPanelInterval-1);expect(nextPage).not.toHaveBeenCalled();
+  stop();vi.advanceTimersByTime(boardPanelInterval*2);expect(nextPage).not.toHaveBeenCalled();
+  stop=startBoardPanelScroll(viewport,board,nextPage);
+  vi.advanceTimersByTime(boardPanelInterval);expect(nextPage).toHaveBeenCalledTimes(1);
  });
 });

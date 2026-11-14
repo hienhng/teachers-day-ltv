@@ -4,6 +4,8 @@ A Teachers' Day message board for THCS&THPT Lương Thế Vinh, created by Lươ
 
 Students create pastel sticky notes, choose a classic square, heart, star or leaf and up to two stickers at diagonal corners, then write a message for a teacher. Shapes keep their proportions while text sizes down to fit, including in PNG exports. Every submitted note is automatically sent to moderation for the shared classroom chalkboard. Notes can also be shared by URL or downloaded as PNG or QR. Public notes appear only after moderator approval.
 
+The open board checks its current page every five seconds and automatically displays moderation changes, including newly approved notes. Background updates keep the board visible and open notes intact. Checks pause in hidden tabs and resume immediately when returning; temporary connection failures retain the last successful board and retry with backoff.
+
 ## Run locally
 
 Requires Node.js 22.13 or newer.

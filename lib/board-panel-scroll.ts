@@ -1,7 +1,7 @@
 export const boardPanelInterval=120_000;
 
-/** Keep the loop duplicate outside manual scrolling; reveal it only while wrapping. */
-export function startBoardPanelScroll(viewport:HTMLElement,board:HTMLElement){
+/** Advance through panels, then load the next page or loop the current panels. */
+export function startBoardPanelScroll(viewport:HTMLElement,board:HTMLElement,onPageEnd?:()=>void){
  let timer:ReturnType<typeof setTimeout>,frame=0,animating=false;
  let loop:{first:number;last:number;clone:number}|undefined;
  const cancelAnimation=()=>{
@@ -21,11 +21,12 @@ export function startBoardPanelScroll(viewport:HTMLElement,board:HTMLElement){
   const allPanels=Array.from(board.querySelectorAll<HTMLElement>('.board-note-panel'));
   const clone=allPanels.find(panel=>panel.hasAttribute('data-board-loop-clone'));
   const panels=allPanels.filter(panel=>panel!==clone);
-  if(panels.length<2)return;
+  if(panels.length<2){onPageEnd?.();return}
   const viewportTop=viewport.getBoundingClientRect().top+viewport.clientTop;
   const offsets=panels.map(panel=>panel.getBoundingClientRect().top-viewportTop+viewport.scrollTop);
   const current=offsets.reduce((nearest,offset,index)=>Math.abs(offset-viewport.scrollTop)<Math.abs(offsets[nearest]-viewport.scrollTop)?index:nearest,0);
   const next=(current+1)%offsets.length;
+  if(next===0&&onPageEnd){onPageEnd();return}
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){viewport.scrollTop=offsets[next];schedule();return}
   animating=true;viewport.classList.add('board-is-advancing');
   let target=offsets[next];
