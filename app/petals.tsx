@@ -103,7 +103,7 @@ export default function Petals({initialView='home'}:{initialView?:'home'|'garden
  useEffect(()=>{if(!notice)return;const t=setTimeout(()=>setNotice(''),4500);return()=>clearTimeout(t)},[notice]);
  useEffect(()=>{if(selected)dialog.current?.showModal();else dialog.current?.close()},[selected]);
  useEffect(()=>{if(step>=5&&!bloom)resultHeading.current?.focus({preventScroll:true})},[step,bloom]);
- useEffect(()=>{const media=window.matchMedia('(max-width: 700px)');const updatePageSize=()=>{setGardenPageSize(media.matches?10:20);setGardenPage(0)};updatePageSize();media.addEventListener('change',updatePageSize);return()=>media.removeEventListener('change',updatePageSize)},[]);
+ useEffect(()=>{const media=window.matchMedia('(max-width: 700px) and (orientation: portrait)');const updatePageSize=()=>{setGardenPageSize(media.matches?10:20);setGardenPage(0)};updatePageSize();media.addEventListener('change',updatePageSize);return()=>media.removeEventListener('change',updatePageSize)},[]);
  useEffect(()=>{
   if(view!=='garden')return;
   const target=new URLSearchParams(location.search).get('note');

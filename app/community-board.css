@@ -145,3 +145,9 @@ body:has(.classroom-community) { overflow: hidden; }
   .classroom-community .empty-board h2 { font-size: 22px; }
   .classroom-community .community-tray { bottom: -7px; left: -7px; right: -7px; }
 }
+@media (orientation: landscape) and (max-height: 500px) {
+  .classroom-community .community-chalkboard { padding: 10px 16px 14px; }
+  .classroom-community .board-logo { margin-bottom: 4px; }
+  .classroom-community .board-footer { row-gap: 4px; padding-top: 8px; }
+  .classroom-community .board-privacy { font-size: 7px; line-height: 1.4; }
+}

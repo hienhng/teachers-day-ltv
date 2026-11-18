@@ -2,7 +2,7 @@
 import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
 import type {Card} from '../lib/card-validation';
 import {noteShape} from '../lib/note-design';
-import {boardPanelNoteSize,boardPanelCapacity,growBoardPapers,layoutBoardPanel,sectionBoardNotes,type BoardReservedArea} from '../lib/board-note-layout';
+import {boardPanelNoteSize,boardPanelCapacity,boardUsesDenseLayout,growBoardPapers,layoutBoardPanel,sectionBoardNotes,type BoardReservedArea} from '../lib/board-note-layout';
 import {startBoardPanelScroll} from '../lib/board-panel-scroll';
 import {StickyNote} from './sticky-note';
 import './scattered-notes.css';
@@ -23,7 +23,8 @@ export function ScatteredNotes({cards,page=0,onSelect,showGreeting=false,openedC
   const scopedKey=widthScope+key;
   setPanelWidths(previous=>previous[scopedKey]===width?previous:{...previous,[scopedKey]:width});
  },[widthScope]);
- const greetingTop=bounds.width<1100?0:Math.max(12,(bounds.height-greetingSize.height)/2);
+ const dense=boardUsesDenseLayout(bounds.width,bounds.height);
+ const greetingTop=dense?Math.max(12,(bounds.height-greetingSize.height)/2):0;
  const reservedGreeting=useMemo(()=>showGreeting?{x:(bounds.width-greetingSize.width)/2-12,y:greetingTop-12,width:greetingSize.width+24,height:greetingSize.height+24}:undefined,[showGreeting,bounds.width,greetingSize,greetingTop]);
  const capacity=boardPanelCapacity(bounds.width,bounds.height,reservedGreeting);
  const panels=useMemo(()=>sectionBoardNotes(cards,capacity),[cards,capacity]);
@@ -72,7 +73,7 @@ export function ScatteredNotes({cards,page=0,onSelect,showGreeting=false,openedC
   return startBoardPanelScroll(viewport,board,onPageEnd);
  },[pageKey,capacity,panels.length,paused,openedCardId,bounds.width,onPageEnd]);
  const sections=panels.length?panels:showGreeting?[[]]:[];
- return <div ref={container} className="sectioned-notes" style={{'--board-viewport-width':`${bounds.width}px`} as CSSProperties}>
+ return <div ref={container} className="sectioned-notes" data-dense-board={dense||undefined} style={{'--board-viewport-width':`${bounds.width}px`} as CSSProperties}>
   {showGreeting&&<div className="board-fixed-title"><ChalkGreeting inscriptionRef={greeting} left={boardWidth/2} top={greetingTop}/></div>}
   {sections.map((notes,index)=><ScatteredNotePanel key={index} cards={notes} onSelect={onSelect} openedCardId={openedCardId} targetCardId={targetCardId} reservedGreeting={reservedGreeting} bounds={bounds} noteSize={noteSize} index={index} count={sections.length} reportWidth={reportWidth} boardWidth={boardWidth}/>)}
   {panels.length>1&&<ScatteredNotePanel cards={panels[0]} onSelect={onSelect} reservedGreeting={reservedGreeting} bounds={bounds} noteSize={noteSize} index={0} count={sections.length} boardWidth={boardWidth} loopClone/>}
@@ -81,13 +82,14 @@ export function ScatteredNotes({cards,page=0,onSelect,showGreeting=false,openedC
 
 function ScatteredNotePanel({cards,onSelect,openedCardId,targetCardId,bounds,noteSize,index,count,loopClone=false,reservedGreeting,reportWidth,boardWidth}:ScatteredNotesProps&{bounds:{width:number;height:number};noteSize:number;index:number;count:number;loopClone?:boolean;reservedGreeting?:BoardReservedArea;reportWidth?:(key:string,width:number)=>void;boardWidth?:number}){
  const panelRef=useRef<HTMLDivElement>(null);
+ const dense=boardUsesDenseLayout(bounds.width,bounds.height);
  const layout=useMemo(()=>layoutBoardPanel(cards.map(card=>card.id||card.recipient),bounds.width,bounds.height,cards.map(card=>noteSize*(bounds.width>=760&&noteShape(card.theme).shape==='square'?.92:1)),reservedGreeting,undefined,true),[cards,bounds,noteSize,reservedGreeting]);
  useLayoutEffect(()=>{reportWidth?.(String(index),layout.width)},[reportWidth,index,layout.width]);
  useLayoutEffect(()=>{
   const panel=panelRef.current;
   if(!panel)return;
   const papers=[...panel.querySelectorAll<HTMLElement>('.board-note-paper')];
-  if(bounds.width<760){
+  if(!dense){
    const placeReadableNotes=()=>{
     let top=Math.max(12,reservedGreeting?reservedGreeting.y+reservedGreeting.height+24:12);
     papers.forEach(paper=>{
@@ -104,7 +106,6 @@ function ScatteredNotePanel({cards,onSelect,openedCardId,targetCardId,bounds,not
    papers.forEach(paper=>observer.observe(paper.querySelector('.sticky-note')!));
    return()=>observer.disconnect();
   }
-  if(!matchMedia('(min-width: 2200px) and (min-height: 1000px)').matches)return;
   const centerOffset=((boardWidth||layout.width)-layout.width)/2;
   papers.forEach((paper,index)=>{
    paper.style.setProperty('--board-paper-scale','1');
@@ -126,14 +127,14 @@ function ScatteredNotePanel({cards,onSelect,openedCardId,targetCardId,bounds,not
    paper.parentElement!.style.left=`${layout.positions[index].left+centerOffset+placement.offsetX}px`;
    paper.parentElement!.style.top=`${layout.positions[index].top+placement.offsetY}px`;
   });
- },[layout,boardWidth,reservedGreeting,bounds.width,bounds.height]);
+ },[layout,boardWidth,reservedGreeting,bounds.width,bounds.height,dense]);
  return <div ref={panelRef} className="board-notes scattered-notes board-note-panel" data-expanded={layout.height>bounds.height||layout.width>bounds.width||undefined} data-board-loop-clone={loopClone||undefined} inert={loopClone||undefined} aria-hidden={loopClone||undefined} role="group" aria-label={`Phần ${index+1} / ${count}`} style={{width:boardWidth||layout.width,height:layout.height,visibility:bounds.width?'visible':'hidden','--board-note-size':`${noteSize}px`,'--board-viewport-width':`${bounds.width}px`} as CSSProperties}>
   {cards.map((card,index)=>{
    const originalPosition=layout.positions[index];
    const position={...originalPosition,left:originalPosition.left+((boardWidth||layout.width)-layout.width)/2};
    const size=layout.sizes[index];
    const targeted=Boolean(targetCardId&&card.id===targetCardId);
-   return <button className="board-note-button" data-targeted={targeted||undefined} data-opened={Boolean(openedCardId&&card.id===openedCardId)||undefined} key={card.id} onClick={event=>onSelect(card,event.currentTarget)} aria-label={`${targeted?'Lời nhắn của bạn. ':''}Đọc lời nhắn gửi ${card.recipient}`} style={{left:position.left,top:position.top,width:size,height:size,'--note-rotation':`${position.rotation}deg`} as CSSProperties}><span className="board-note-paper"><StickyNote card={card} compact readablePreview={bounds.width<760}/></span></button>;
+   return <button className="board-note-button" data-targeted={targeted||undefined} data-opened={Boolean(openedCardId&&card.id===openedCardId)||undefined} key={card.id} onClick={event=>onSelect(card,event.currentTarget)} aria-label={`${targeted?'Lời nhắn của bạn. ':''}Đọc lời nhắn gửi ${card.recipient}`} style={{left:position.left,top:position.top,width:size,height:size,'--note-rotation':`${position.rotation}deg`} as CSSProperties}><span className="board-note-paper"><StickyNote card={card} compact readablePreview={!dense}/></span></button>;
   })}
  </div>;
 }

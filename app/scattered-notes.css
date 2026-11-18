@@ -17,10 +17,9 @@
  display: block;
  transform-origin: top left;
 }
-/* Each paper grows to its measured free space on roomy boards. */
-@media (min-width: 2200px) and (min-height: 1000px) {
- .scattered-notes .board-note-paper { transform: scale(var(--board-paper-scale, 1.12)); transform-origin: center; }
-}
+/* Reclaim free space after fitting the complete page, including decorations. */
+.sectioned-notes[data-dense-board] .board-note-paper { transform: scale(var(--board-paper-scale, 1)); transform-origin: center; }
+.sectioned-notes[data-dense-board] .sticky-note .note-tape { width: 18%; max-width: 76px; }
 .scattered-notes .board-note-button .sticky-note {
  width: 100%;
  max-width: none;
@@ -288,6 +287,23 @@
  .board-fixed-title .greeting-doodle-sparks { stroke: #52613e; }
  .board-fixed-title .greeting-chalk-date::before,
  .board-fixed-title .greeting-chalk-date::after { border-color: #946b42; }
+}
+/* Leave more of a smaller board for the twenty papers around the title. */
+@media (min-width: 760px) and (max-width: 2199px), (min-width: 2200px) and (max-height: 999px) {
+ .board-fixed-title .board-chalk-greeting { width: clamp(180px, calc(var(--board-viewport-width) * .2), 340px); padding: 14px 18px 18px; }
+ .board-fixed-title .board-chalk-greeting h1 { font-size: clamp(17px, 2vw, 34px); }
+ .board-fixed-title .greeting-chalk-emblem { width: clamp(32px, 3vw, 52px); margin-bottom: 6px; }
+ .board-fixed-title .greeting-doodle { scale: 1; }
+}
+@media (min-width: 760px) and (max-width: 1099px) {
+ .board-fixed-title .board-chalk-greeting { padding-top: 48px; }
+ .board-fixed-title .greeting-margin-doodles { inset: 42px 8px 10px; }
+}
+@media (max-width: 759px), (orientation: landscape) and (max-height: 500px) {
+ .sectioned-notes[data-dense-board] .board-chalk-greeting { width: 130px; padding: 30px 12px 10px; }
+ .sectioned-notes[data-dense-board] .board-chalk-greeting h1 { font-size: 12px; }
+ .sectioned-notes[data-dense-board] .greeting-margin-doodles { inset: 27px 4px 5px; }
+ .sectioned-notes[data-dense-board] .greeting-doodle { width: 10px; }
 }
 .scattered-notes .sticky-note.note-readable-preview .note-content { align-items: center; }
 .scattered-notes .sticky-note.note-readable-preview .note-writing { font-size: 14px; height: max-content; justify-content: center; gap: .6em; }

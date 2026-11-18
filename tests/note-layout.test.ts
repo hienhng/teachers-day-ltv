@@ -115,9 +115,10 @@ describe('sectioned board panels',()=>{
   expect(panels.flat()).toEqual(notes);
   expect(sectionMeasuredBoardNotes([],8,1920,900,String,()=>220,greeting)).toEqual([]);
  });
- it('uses larger displays for more readable scattered notes per panel',()=>{
+ it('uses larger displays for larger scattered notes at the same capacity',()=>{
   const small=boardPanelCapacity(1328,750),large=boardPanelCapacity(2560,1440);
-  expect(large).toBeGreaterThan(small);expect(large).toBe(20);
+  expect(small).toBe(20);expect(large).toBe(20);
+  expect(boardPanelNoteSize(20,2560,1440)).toBeGreaterThan(boardPanelNoteSize(20,1328,750));
   const greeting={x:1100,y:600,width:360,height:240};
   const ids=Array.from({length:large},(_,index)=>`large-${index}`);
   const panels=sectionMeasuredBoardNotes(ids,large,2560,1440,id=>id,()=>200,greeting);
@@ -144,8 +145,8 @@ describe('sectioned board panels',()=>{
   expect(boardPanelCapacity(width,height,greeting)).toBe(20);
   expect(boardPanelCapacity(2420,1250,{...greeting,x:(2420-504)/2,y:(1250-378)/2})).toBe(20);
   expect(boardPanelCapacity(3720,1900)).toBe(20);
-  expect(boardPanelCapacity(2199,1440)).toBeLessThanOrEqual(8);
-  expect(boardPanelCapacity(2560,999)).toBeLessThanOrEqual(8);
+  expect(boardPanelCapacity(2199,1440)).toBe(20);
+  expect(boardPanelCapacity(2560,999)).toBe(20);
   const notes=Array.from({length:40},(_,index)=>`dense-${index}`);
   const panels=sectionBoardNotes(notes,boardPanelCapacity(width,height,greeting));
   expect(panels.map(panel=>panel.length)).toEqual([20,20]);
@@ -167,13 +168,32 @@ describe('sectioned board panels',()=>{
    });
   }
  });
+ it('fits twenty decorated papers on laptop and tablet boards without collisions',()=>{
+  for(const [width,height] of [[600,240],[700,320],[760,600],[900,640],[1170,550],[1328,620],[1440,750],[1920,900]]){
+   const greetingWidth=width<760?130:220,greetingHeight=width<760?120:200;
+   const greeting={x:(width-greetingWidth)/2,y:(height-greetingHeight)/2,width:greetingWidth,height:greetingHeight};
+   const ids=Array.from({length:20},(_,index)=>`smaller-${width}-${index}`);
+   const panels=sectionBoardNotes(ids,boardPanelCapacity(width,height,greeting));
+   expect(panels).toEqual([ids]);
+   const size=boardPanelNoteSize(20,width,height,greeting);
+   const layout=layoutBoardPanel(ids,width,height,ids.map(()=>size),greeting,undefined,true);
+   expect(layout).toMatchObject({width,height,sizes:ids.map(()=>size)});
+   const footprint=size*1.4+12;
+   const boxes=layout.positions.map(({left,top})=>({x:left-(footprint-size)/2,y:top-(footprint-size)/2,width:footprint,height:footprint}));
+   boxes.forEach((box,index)=>{
+    expect(box.x).toBeGreaterThanOrEqual(8);expect(box.y).toBeGreaterThanOrEqual(8);
+    expect(box.x+box.width).toBeLessThanOrEqual(width-8);expect(box.y+box.height).toBeLessThanOrEqual(height-8);
+    for(const other of [...boxes.slice(index+1),greeting])expect(box.x+box.width+12<=other.x+1e-6||other.x+other.width+12<=box.x+1e-6||box.y+box.height+12<=other.y+1e-6||other.y+other.height+12<=box.y+1e-6).toBe(true);
+   });
+  }
+ });
  it('adapts capacity to board width and height and balances larger panels',()=>{
-  expect(boardPanelCapacity(1920,900)).toBe(8);
-  expect(boardPanelCapacity(1328,750)).toBe(4);
-  expect(boardPanelCapacity(1170,550)).toBe(2);
-  expect(boardPanelCapacity(850,600)).toBe(2);
+  expect(boardPanelCapacity(1920,900)).toBe(20);
+  expect(boardPanelCapacity(1328,750)).toBe(20);
+  expect(boardPanelCapacity(1170,550)).toBe(20);
+  expect(boardPanelCapacity(850,600)).toBe(20);
   expect(boardPanelCapacity(350,700)).toBe(2);
-  expect(boardPanelCapacity(1328,320)).toBe(1);
+  expect(boardPanelCapacity(1328,320)).toBe(20);
   const notes=Array.from({length:30},(_,index)=>index);
   expect(sectionBoardNotes(notes,8).map(panel=>panel.length)).toEqual([8,8,7,7]);
   expect(sectionBoardNotes(Array.from({length:40}),20).map(panel=>panel.length)).toEqual([20,20]);
@@ -184,7 +204,7 @@ describe('sectioned board panels',()=>{
   }
  });
  it('uses two or three large notes per small-screen panel without shrinking to the viewport height',()=>{
-  for(const [width,height] of [[280,600],[350,700],[390,1100],[700,320],[850,1100]]){
+  for(const [width,height] of [[280,600],[350,700],[390,1100],[700,1000]]){
    const capacity=boardPanelCapacity(width,height),greeting={x:16,y:0,width:width-32,height:170};
    expect(capacity).toBe(height>=1000?3:2);
    const panels=sectionBoardNotes(Array.from({length:10},(_,index)=>`readable-${index}`),capacity);
@@ -223,7 +243,7 @@ describe('sectioned board panels',()=>{
    const greeting={x:width>=760?(width-360)/2:16,y:(height-120)/2,width:width>=760?360:width-32,height:120};
    const capacity=boardPanelCapacity(width,height,greeting);
    expect(capacity).toBeGreaterThanOrEqual(1);
-   expect(capacity).toBeLessThanOrEqual(8);
+   expect(capacity).toBeLessThanOrEqual(20);
    for(let count=0;count<=30;count++){
     const notes=Array.from({length:count},(_,index)=>`adaptive-${index}`);
     const panels=sectionBoardNotes(notes,capacity);

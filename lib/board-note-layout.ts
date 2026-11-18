@@ -34,11 +34,6 @@ export function growBoardPapers(papers:BoardPaperBounds[],width:number,height:nu
  return placements;
 }
 
-// Only large, tall boards get denser panels; ordinary screens keep their limits.
-function boardPanelDensity(width:number,height:number){
- return width>=2200&&height>=1000?{limit:20,scale:.92,minimum:180}:{limit:8,scale:1,minimum:readableBoardNoteSize(width)};
-}
-
 // Give each note its own gentle tilt, independent of shape, size and placement.
 // Keep it stable when the note moves to another panel or the viewport resizes.
 export function boardNoteRotation(id:string){
@@ -50,12 +45,11 @@ export function boardNoteRotation(id:string){
  return (((value^(value>>>14))>>>0)/4294967296-.5)*10;
 }
 
-export function boardPanelCapacity(width:number,height:number,greeting?:BoardReservedArea){
- if(width<1100)return height>=1000?3:2;
- const {limit,scale,minimum}=boardPanelDensity(width,height);
- const reserved=greeting??{x:width>=760?(width-Math.min(360,width*.32))/2:16,y:(height-(width>=760?240:120))/2,width:width>=760?Math.min(360,width*.32):width-32,height:width>=760?240:120};
- for(let count=limit;count>=1;count--)if(panelMetrics(count,width,height,reserved).maxSize*scale>=minimum)return count;
- return 1;
+export function boardUsesDenseLayout(width:number,height:number){return width>=760||width>height}
+
+export function boardPanelCapacity(width:number,height:number,_greeting?:BoardReservedArea){
+ // Fit the full page on horizontal screens; portrait phones keep readable papers.
+ return boardUsesDenseLayout(width,height)?20:(height>=1000?3:2);
 }
 
 export function readableBoardNoteSize(width:number){return width>=760?200:160}
@@ -67,7 +61,7 @@ export function boardNoteViewportSize(width:number,height:number){
 
 // Use the busiest panel's available space for one paper size across the board.
 export function boardPanelNoteSize(count:number,width:number,height:number,greeting?:BoardReservedArea){
- if(width<1100&&count<=3)return Math.max(1,((width-16)/(width<760?1:Math.min(2,Math.max(1,count)))-24)/1.25);
+ if(!boardUsesDenseLayout(width,height)&&count<=3)return Math.max(1,((width-16)-24)/1.25);
  return Math.min(boardNoteViewportSize(width,height),panelMetrics(count,width,height,greeting).maxSize);
 }
 
@@ -113,7 +107,7 @@ export function sectionMeasuredBoardNotes<T>(notes:T[],capacity:number,width:num
 
 // Fit equal papers into differently sized regions without giving each region
 // the same number of notes. This lets the full-width top and bottom do their share.
-function fitBoardRegions(count:number,regions:BoardReservedArea[]){
+function fitBoardRegions(count:number,regions:BoardReservedArea[],paperInset=28){
  const gap=12,zones=regions.filter(zone=>zone.width>0&&zone.height>0),needed=Math.max(1,count);
  const grid=(zone:BoardReservedArea,footprint:number)=>({columns:Math.max(0,Math.floor((zone.width+gap)/(footprint+gap))),rows:Math.max(0,Math.floor((zone.height+gap)/(footprint+gap)))});
  let low=0,high=Math.max(0,...zones.map(zone=>Math.min(zone.width,zone.height)));
@@ -134,12 +128,12 @@ function fitBoardRegions(count:number,regions:BoardReservedArea[]){
   }
   if(cells.length===before)break;
  }
- return {maxSize:Math.max(1,(low-28)/1.4),cells};
+ return {maxSize:Math.max(1,(low-paperInset)/1.4),cells};
 }
 
 function panelMetrics(count:number,width:number,height:number,greeting?:BoardReservedArea){
- const padding=8,gap=12;
- const sideGreeting=Boolean(greeting&&width>=760);
+ const padding=8,gap=12,paperInset=boardUsesDenseLayout(width,height)&&(width<2200||height<1000)?14:28;
+ const sideGreeting=Boolean(greeting&&boardUsesDenseLayout(width,height));
  // Keep a safe fit for smaller screens, and compare both ways of dividing the
  // complete board around the title on large screens.
  const zones:BoardReservedArea[]=greeting?(sideGreeting?[
@@ -158,18 +152,18 @@ function panelMetrics(count:number,width:number,height:number,greeting?:BoardRes
   if(fit>bestFit){bestFit=fit;columns=candidate;rows=candidateRows}
  }
  const cellWidth=Math.max(1,(laneWidth-gap*(columns-1))/columns),cellHeight=Math.max(1,(laneHeight-gap*(rows-1))/rows);
- const maxSize=Math.max(1,(Math.min(cellWidth,cellHeight)-padding*2-12)/1.4);
+ const maxSize=Math.max(1,(Math.min(cellWidth,cellHeight)-paperInset)/1.4);
  const cells=Array.from({length:count},(_,index)=>{
   const zone=zones[index%zones.length],slot=Math.floor(index/zones.length);
   return {x:zone.x+(slot%columns)*(cellWidth+gap),y:zone.y+Math.floor(slot/columns)*(cellHeight+gap),width:cellWidth,height:cellHeight};
  });
- if(greeting&&sideGreeting&&boardPanelDensity(width,height).limit===20){
+ if(greeting&&sideGreeting){
   const fullBoard=fitBoardRegions(count,[
    {x:padding,y:padding,width:width-padding*2,height:greeting.y-gap-padding},
    {x:padding,y:greeting.y+greeting.height+gap,width:width-padding*2,height:height-greeting.y-greeting.height-gap-padding},
    {x:padding,y:greeting.y,width:greeting.x-gap-padding,height:greeting.height},
    {x:greeting.x+greeting.width+gap,y:greeting.y,width:width-greeting.x-greeting.width-gap-padding,height:greeting.height},
-  ]);
+  ],paperInset);
   if(fullBoard.maxSize>maxSize&&fullBoard.cells.length===count)return fullBoard;
  }
  return {cells,maxSize};
@@ -214,9 +208,8 @@ function loosenBoardPositions(positions:BoardNotePosition[],sizes:number[],width
 }
 
 export function layoutBoardPanel(ids:string[],width:number,height:number,noteSizes:number[]=[],greeting?:BoardReservedArea,viewportSize=boardNoteViewportSize(width,height),proportional=false):{size:number;sizes:number[];width:number;height:number;positions:BoardNotePosition[]}{
- // Small screens use large, readable papers below a compact heading. Short
- // landscape screens scroll vertically rather than shrinking the writing.
- if(proportional&&width<1100&&ids.length>0&&ids.length<=3){
+ // Portrait phones use large, readable papers below a compact heading.
+ if(proportional&&!boardUsesDenseLayout(width,height)&&ids.length>0&&ids.length<=3){
   const padding=8,gap=24,columns=width<760?1:Math.min(2,ids.length),rows=Math.ceil(ids.length/columns);
   const target=boardPanelNoteSize(columns,width,height,greeting);
   const sizes=ids.map((_,index)=>Math.min(target,noteSizes[index]||target));
@@ -228,7 +221,7 @@ export function layoutBoardPanel(ids:string[],width:number,height:number,noteSiz
   const positions=ids.map((id,index)=>({left:padding+laneWidth*(index%columns+.5)-sizes[index]/2,top:start+extra+Math.floor(index/columns)*rowHeight+(Math.max(...footprints)-sizes[index])/2,rotation:boardNoteRotation(id)}));
   return {size:target,sizes,width,height:boardHeight,positions};
  }
- const padding=8,gap=12,sideGreeting=Boolean(greeting&&width>=760);
+ const padding=8,gap=12,sideGreeting=Boolean(greeting&&boardUsesDenseLayout(width,height));
  const {cells,maxSize}=panelMetrics(ids.length,width,height,greeting);
  const size=Math.min(viewportSize,maxSize);
  const minimum=Math.min(readableBoardNoteSize(width),maxSize);
